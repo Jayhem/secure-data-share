@@ -1,5 +1,8 @@
 let IPFSUtil = require ('../client/src/utils/multihash');
 let catchRevert = require("./exceptionsHelpers.js").catchRevert
+let catchZeroPubKey = require("./exceptionsHelpers.js").catchZeroPubKey
+let catchNoPubKey = require("./exceptionsHelpers.js").catchNoPubKey
+
 const BN = web3.utils.BN
 const dataShare = artifacts.require("dataShare");
 const ethjsutil = require('ethjs-util');
@@ -13,12 +16,12 @@ var pk = new BN('1'); // private key as big number
 var pubPoint=G.mul(pk); // EC multiplication to determine public point 
 
 
-const pub1X = pubPoint.getX().toBuffer(); //32 bit x co-ordinate of public point 
-const pub1Y = pubPoint.getY().toBuffer(); //32 bit y co-ordinate of public point 
+const x = pubPoint.getX().toBuffer(); //32 bit x co-ordinate of public point 
+const y = pubPoint.getY().toBuffer(); //32 bit y co-ordinate of public point 
 
-var publicKey =Buffer.concat([pub1X,pub1Y])
+var publicKey =Buffer.concat([x,y])
 
-console.log("pub key::"+publicKey.toString('hex'))
+// console.log("pub key::"+publicKey.toString('hex'))
 
 
 contract('dataShare', function(accounts) {
@@ -50,9 +53,10 @@ contract('dataShare', function(accounts) {
     // const hash = 
     // console.log(ecRecover(hash,v,r,s))
     // const publicKey1 = privateToPublic(privateKeyBuff);
-    // const pub1X = publicKey1.slice(0,32);
-    // const pub1Y = publicKey1.slice(32,64);
-
+    const pub1X = `0x${x.toString('hex')}`;
+    const pub1Y = `0x${y.toString('hex')}`;
+    const nullpoint = '0x0000000000000000000000000000000000000000000000000000000000000000'
+    console.log('pub1X : ' + pub1X);
     let instance
 
     beforeEach(async () => {
@@ -125,52 +129,98 @@ contract('dataShare', function(accounts) {
         })
 
         describe("Manage requests()", async() =>{
-            it.only("Only the owner can grant or refuse requests", async() => {
+            it.only("Only the owner can grant requests", async() => {
                 // deploy two contents
                 await instance.addContent(content1, {from: deployAccount} )
                 await instance.addContent(content2, {from: deployAccount} )
 
                 // first account request access to content1
-                await instance.requestAccessWithKey(0, pub1X.toString('hex'), pub1Y.toString('hex'), {from: firstAccount} )
+                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount} )
                 
                 // now first account tries to grant access
-                await catchRevert(instance.grantAccess(0, {from: firstAccount}))
+                await catchRevert(instance.grantAccess(firstAccount, 0, content1, {from: firstAccount}))
                 
                 // now owner grants access, logs show access was granted and data too
-                const tx = await instance.grantAccess(0, {from: deployAccount})
-                assert.equal() 
+                const tx = await instance.grantAccess(firstAccount, 0, content1, {from: deployAccount})
                 const eventData = tx.logs[0]
-
-                assert.equal(eventData.event, "LogGetRefund", "the event should be called LogGetRefund")
-                assert.equal(eventData.args.accountRefunded, firstAccount, "the firstAccount should be the 'accountRefunded'")
+                const status = await instance.getUserStatusForDatum(0,firstAccount)
+                
+                assert.equal(status,2,`Access status should be 2(granted) instead it was ${status}`)
+                assert.equal(eventData.event, "LogAccessGranted", "the event should be called LogAccessGranted")
+                assert.equal(eventData.args.user, firstAccount, "the firstAccount should be the 'grantee'")
             })
 
-            it("account requesting a refund should be credited the appropriate amount", async() => {
-                const preSaleAmount = await web3.eth.getBalance(secondAccount)
-                await instance.addEvent(event1.description, event1.website, event1.ticketsAvailable, {from: deployAccount} )
-                const buyReceipt = await instance.buyTickets(0, 1, {from: secondAccount, value: ticketPrice})
-                const refundReceipt =await instance.getRefund(0, {from: secondAccount})
-                const postSaleAmount = await web3.eth.getBalance(secondAccount) 
+            it.only("Only the owner can refuse requests", async() => {
+                // deploy two contents
+                await instance.addContent(content1, {from: deployAccount} )
+                await instance.addContent(content2, {from: deployAccount} )
+
+                // first account request access to content1
+                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount} )
                 
-                const buyTx = await web3.eth.getTransaction(buyReceipt.tx)
-                let buyTxCost = Number(buyTx.gasPrice) * buyReceipt.receipt.gasUsed
+                // now first account tries to refuse access
+                await catchRevert(instance.refuseAccess(firstAccount, 0, {from: firstAccount}))
+                
+                // now owner refuses access, logs show access was refused and data too
+                const tx = await instance.refuseAccess(firstAccount, 0, {from: deployAccount})
+                const eventData = tx.logs[0]
+                const status = await instance.getUserStatusForDatum(0,firstAccount)
+                
+                assert.equal(status,0,`Access status should be 0(refused/inexistent) instead it was ${status}`)
+                assert.equal(eventData.event, "LogAccessRefused", "the event should be called LogAccessRefused")
+                assert.equal(eventData.args.user, firstAccount, "the firstAccount should be the 'refusee'")
+            })
+            it.only("Only the owner can revoke access", async() => {
+                // deploy two contents
+                await instance.addContent(content1, {from: deployAccount} )
+                await instance.addContent(content2, {from: deployAccount} )
 
-                const refundTx = await web3.eth.getTransaction(refundReceipt.tx)
-                let refundTxCost = Number(refundTx.gasPrice) * refundReceipt.receipt.gasUsed
+                // first account request access to content1
+                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount} )
+                
+                // first account request access to content2
+                await instance.requestAccess(1, {from: firstAccount} )
+                
+                // now owner grants access to content 1 and 2
+                await instance.grantAccess(firstAccount, 0, content1, {from: deployAccount})
+                await instance.grantAccess(firstAccount, 0, content2, {from: deployAccount})
 
-                assert.equal(postSaleAmount, (new BN(preSaleAmount).sub(new BN(buyTxCost)).sub(new BN(refundTxCost))).toString(), "buyer should be fully refunded when calling getRefund()")             
+                // now first account tries to revoke access
+                await catchRevert(instance.revokeAccess(firstAccount, 1, content1, {from: firstAccount}))
+                
+                // now owner revokes access to content2, change IPFS location to content1, logs show access was revoked and data too
+                const tx  = await instance.revokeAccess(firstAccount, 1, content1,  {from: deployAccount})
+                const eventData = tx.logs[0]
+                const status = await instance.getUserStatusForDatum(1,firstAccount)
+                const NewIPFSaddress = await instance.getDataLocation(1)
+                
+                assert.equal(status,0,`Access status should be 0(refused/inexistent) instead it was ${status}`)
+                assert.equal(eventData.event, "LogAccessRevoked", "the event should be called LogAccessRevoked")
+                assert.equal(eventData.args.user, firstAccount, "the firstAccount should be the 'revoked'")
+                assert.equal(eventData.args.IPFSaddress, content1, `${content1} should be the new address, instead it was ${eventData.args.IPFSaddress}`)
+                assert.equal(NewIPFSaddress, content1, `${content1} should be the new address, instead it was ${NewIPFSaddress}`)
             })
         })
 
-        describe("getBuyerNumberTickets()", async() =>{
-            it("providing an event id to getBuyerNumberTickets() should tell an account how many tickets they have purchased", async() => {
-                const numberToPurchase = 3
+        describe.only("Public Keys management", async() =>{
+            it("If the user provides a pubkey with all zeros, it should fail", async() => {
+                // deploy two contents
+                await instance.addContent(content1, {from: deployAccount} )
+                await instance.addContent(content2, {from: deployAccount} )
 
-                await instance.addEvent(event1.description, event1.website, event1.ticketsAvailable, {from: deployAccount} )
-                await instance.buyTickets(0, numberToPurchase, {from: secondAccount, value: ticketPrice*numberToPurchase})
-                let result = await instance.getBuyerNumberTickets(0, {from: secondAccount})
+                // first account request access to content1, keys are 0
+                await catchZeroPubKey(instance.requestAccessWithKey(0, nullpoint, nullpoint, {from: firstAccount} ))
+                
+                // first account requests accesss without having provided a public key
+                await catchRevert(instance.requestAccess(0, {from: firstAccount} ))
 
-                assert.equal(result, numberToPurchase, "getBuyerNumberTickets() should return the number of tickets the msg.sender has purchased.")
+                // first account request access to content1, key is non-zero
+                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount} )
+                const result = await instance.getPublicKey(firstAccount, {from:deployAccount})
+
+                assert.equal(result.pubx, pub1X, "pointx of pub key should be the same ")
+                assert.equal(result.puby, pub1Y, "pointy of pub key should be the same ")
+
             })
         })
 

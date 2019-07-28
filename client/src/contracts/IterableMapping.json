@@ -6311,6 +6311,12 @@
     "version": "0.5.8+commit.23d335f2.Emscripten.clang"
   },
   "networks": {
+    "5777": {
+      "events": {},
+      "links": {},
+      "address": "0xb1454CFD7897e997BB3e0E0223B68D6CED03FB14",
+      "transactionHash": "0x560142177de157aad9ba1fa38ed31cca42493a779d924bc660b441e027d02823"
+    },
     "1564024085856": {
       "events": {},
       "links": {},
@@ -6319,7 +6325,7 @@
     }
   },
   "schemaVersion": "3.0.10",
-  "updatedAt": "2019-07-27T03:21:03.269Z",
+  "updatedAt": "2019-07-28T21:38:19.124Z",
   "devdoc": {
     "details": "Models a address -> bool mapping where it is possible to iterate over all keys.",
     "methods": {}

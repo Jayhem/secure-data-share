@@ -23,7 +23,6 @@ contract dataShare is Ownable() {
     // This is because we want to know all users that have content
     // the data_id is the first key
     // then the iterable mapping goes from address to bool, to specify if a user has access to the content
-    
     mapping(uint => IterableMapping.itmap) users;
 
     // access list for a given datum, by a given user (0 does not exist or was rejected, 1 was requested, 2 granted)
@@ -35,10 +34,12 @@ contract dataShare is Ownable() {
     // Events declarations
     event LogAccessRequest(address indexed user_id, uint indexed data_id);
     event LogAccessRequestWithPubKey(address indexed user_id, uint indexed data_id, bytes32 publicKeyX,bytes32 publicKeyY);
-    event LogDataUpdated(uint indexed data_id, bytes32 indexed IPFSaddress);
     event LogAccessGranted(address indexed user, uint indexed data_id, bytes32 IPFSaddress);
     event LogAccessRevoked(address indexed user, uint indexed data_id, bytes32 IPFSaddress);
+    event LogAccessRefused(address indexed user, uint indexed data_id);
     event LogContentAdded(uint indexed data_id, bytes32 IPFSaddress);
+    event LogDataUpdated(uint indexed data_id, bytes32 indexed IPFSaddress);
+
 
     // constructor() public {
     //     // nothing to do except calling ownable constructor
@@ -51,7 +52,7 @@ contract dataShare is Ownable() {
 
     function isPubKeyNotZero(bytes32 publicKeyX, bytes32 publicKeyY) internal pure returns (bool) {
         // function checks if the public key is different from 0
-        bytes32 nopubkey = bytes32(0x00000000000000000000000000000000);
+        bytes32 nopubkey = bytes32(0x0000000000000000000000000000000000000000000000000000000000000000);
         if (publicKeyX != nopubkey || publicKeyY != nopubkey) {
             return true;
         }
@@ -63,7 +64,8 @@ contract dataShare is Ownable() {
         // After all, no on is harmed except user if it is wrong
         require(isPubKeyNotZero(publicKeyX,publicKeyY), "public key cannot be 0");
         access_list[data_id][msg.sender] = 1;
-        user_keys[msg.sender];
+        pubkey memory publicKey = pubkey(publicKeyX,publicKeyY);
+        user_keys[msg.sender] = publicKey;
         users[data_id].insert(msg.sender,true);
         emit LogAccessRequestWithPubKey(msg.sender, data_id, publicKeyX, publicKeyY);
         }
@@ -95,10 +97,11 @@ contract dataShare is Ownable() {
         data[data_id] = newContentLocation; // because the client has added the sharedKey for user, the content is updated
         emit LogAccessGranted(user, data_id, newContentLocation);
     }
-    // update encrypted content and/or metadata, but not the keys
-    function updateContent(uint data_id, bytes32 IPFSaddress) public onlyOwner() {
-        data[data_id] = IPFSaddress;
-        emit LogDataUpdated(data_id, IPFSaddress);
+
+    // the owner has decided to reject a user's request to share data
+    function refuseAccess(address user_id, uint data_id) public onlyOwner(){
+        access_list[data_id][user_id] = 0; // 0 means access not granted
+        emit LogAccessRefused(user_id, data_id);
     }
 
     // revoke a given user his access to a datum
@@ -108,7 +111,7 @@ contract dataShare is Ownable() {
     // This is a great idea I think - how does it work again?
     // after thinking about it more, I think the better solution is to store the sharedKey in the IPFS document directly
     // so this means, the only thing that changes is the access list and the IPFS address for the content
-    function revokeAccess(address user_id, uint data_id, bytes32 newContentLocation) public {
+    function revokeAccess(address user_id, uint data_id, bytes32 newContentLocation) public onlyOwner() {
         access_list[data_id][user_id] = 0; // 0 means access not granted
         data[data_id] = newContentLocation; // because the web client has removed the sharedKey for user, the content is updated
         emit LogAccessRevoked(user_id, data_id, newContentLocation);
@@ -120,6 +123,12 @@ contract dataShare is Ownable() {
         return data[data_id];
     }
 
+    // update encrypted content and/or metadata, but not the keys
+    function updateContent(uint data_id, bytes32 IPFSaddress) public onlyOwner() {
+        data[data_id] = IPFSaddress;
+        emit LogDataUpdated(data_id, IPFSaddress);
+    }
+
     // for a given data_id, the function returns all the addresses that have access
     function getUsersForDatum(uint data_id) public view returns ( address[] memory) {
         address[] memory the_users;
@@ -127,10 +136,19 @@ contract dataShare is Ownable() {
         {
             (address user, bool status) = users[data_id].iterate_get(i);
             if (status == true) {
-               the_users[i]=user;
+               the_users[i] = user;
             }
         return the_users;
         }
+    }
+    // for a given data_id and user, the function returns the access status
+    function getUserStatusForDatum(uint data_id, address user) public view returns (uint) {
+        return access_list[data_id][user];
+    }
+
+    // for a given user, return the public key
+    function getPublicKey(address user) public view onlyOwner() returns (bytes32 pubx, bytes32 puby) {
+        return(user_keys[user].x,user_keys[user].y);
     }
 
 }
