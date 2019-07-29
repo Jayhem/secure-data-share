@@ -246,6 +246,47 @@ contract('dataShare', function(accounts) {
 
             })
         })
+        describe("users for a content", async() =>{
+            beforeEach("3 users request access to content1", async() =>{
+                // deploy two contents
+                await instance.addContent(content1, {from: deployAccount} )
+                await instance.addContent(content2, {from: deployAccount} )
+
+                // first account request access to content1
+                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount})
+                
+                // second account requests accesss to content1
+                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount})
+
+                // third account request access to content1
+                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: thirdAccount} )
+            });
+
+            it("For a given content no user has access yet", async() => {
+                // retrieve all users who have access to content1, which should be none
+                const result = await instance.getAuthorizedUsersForDatum(0, {from:deployAccount})
+                assert.equal(result.length, 0,`it returned more than 0 user ${result.length}`)
+            })
+            it("For a given content 2 granted, one rejected", async() => {
+                // now owner grants access to first and third accounts
+                await instance.grantAccess(firstAccount, 0, content1, {from: deployAccount})
+                await instance.grantAccess(thirdAccount, 0, content1, {from: deployAccount})
+
+                // now owner refuses access to second account
+                await instance.refuseAccess(secondAccount, 0, {from: deployAccount})
+
+                // // retrieve all users who have access to content1, which should be none
+                const result = await instance.getAuthorizedUsersForDatum(0, {from:deployAccount})
+                console.log(result);
+                for (i=0;i<result.length;i++) {
+                    console.log('array cointent : ' + result[i])
+                }
+                
+                assert.equal(result[0], firstAccount, `was supposed to be ${firstAccount} instead was ${result[0]}`)
+                assert.equal(result[1], thirdAccount, `was supposed to be ${thirdAccount} instead was ${result[1]}`)
+
+            })
+        })
 
      
     })
