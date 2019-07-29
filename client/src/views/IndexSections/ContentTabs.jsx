@@ -34,10 +34,26 @@ import {
 
 class ContentTable extends React.Component {
     render() {
-      return ( <h1> fuch this</h1>);
+      if (this.props.content.length === 0) {
+        return (<TabPane tabId="noContent">
+        <p className="description">
+          You are not sharing any content. Try it by clicking on the
+          Share content button!
+        </p>
+      </TabPane>)
+      }
+      else {
+        return ( <TabPane tabId="noContent">
+        <p className="description">
+          You are not sharing any content. Try it by clicking on the
+          Share content button!
+        </p>
+      </TabPane>);
         for (var i = 0; i<this.props.content.length;i++) {
             return (<h1> {this.props.content[i]} </h1>);
-        }      
+        } 
+      }
+     
       }
 }
 
