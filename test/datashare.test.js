@@ -56,14 +56,13 @@ contract('dataShare', function(accounts) {
     const pub1X = `0x${x.toString('hex')}`;
     const pub1Y = `0x${y.toString('hex')}`;
     const nullpoint = '0x0000000000000000000000000000000000000000000000000000000000000000'
-    console.log('pub1X : ' + pub1X);
     let instance
 
     beforeEach(async () => {
         instance = await dataShare.new()
     })
 
-    describe.only("Setup", async() => {
+    describe("Setup", async() => {
 
         it("OWNER should be set to the deploying address", async() => {
             const owner = await instance.owner()
@@ -71,32 +70,57 @@ contract('dataShare', function(accounts) {
         })
     })
 
-    describe.only("Functions", () => {
+    describe("Functions", () => {
         describe("addContent()", async() =>{
             it("only the owner should be able to add content to share", async() => {
                 await instance.addContent(content1, {from: deployAccount} )
                 await catchRevert(instance.addContent(content1, {from: firstAccount}))
+
+                // check content was added to data
+                assert.equal(await instance.getDataLocation(0),content1,"should be content1")
+                assert.equal(await instance.data_index(),1,"should be 1")
             })
 
             it("adding a content should emit an event with the content details ", async() => {
+                await instance.addContent(content1, {from: deployAccount} )
                 const tx = await instance.addContent(content2, {from: deployAccount} )
                 const eventData = tx.logs[0].args
 
-                assert.equal(eventData.data_id, 0, "the added content should use index 1")
+                assert.equal(eventData.data_id, 1, "the added content should use index 1")
                 assert.equal(eventData.IPFSaddress, content2, "the added content should match")
             })
         })
 
         describe("requestAccess()", async() =>{
             it("The request to access content should be recorded as well as the public key", async() => {
-                web3.eth.signTransaction(fakeTx, async(receipt) =>{
-                    console.log(receipt);
-                    // pubkey = ecRecover(receipt.hash, receipt.v, receipt.r, receipt.s);
-                    // console.log(pubkey);
-                });
+                // web3.eth.signTransaction(fakeTx, async(receipt) =>{
+                //     console.log(receipt);
+                //     // pubkey = ecRecover(receipt.hash, receipt.v, receipt.r, receipt.s);
+                //     // console.log(pubkey);
+                // });
+                // deploy two contents
                 await instance.addContent(content1, {from: deployAccount} )
-                await instance.requestAccessWithKey(content1, pub1X, pub1Y, {from: firstAccount} )
+                await instance.addContent(content2, {from: deployAccount} )
 
+                // first account request access to content1
+                var tx = await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount} )
+                
+                var eventData = tx.logs[0]
+                var status = await instance.getUserStatusForDatum(0,firstAccount)
+                
+                assert.equal(status,1,`Access status should be 1 instead it was ${status}`)
+                assert.equal(eventData.event, "LogAccessRequestWithPubKey", "the event should be called LogAccessRequestWithPubKey")
+                assert.equal(eventData.args.user_id, firstAccount, "the firstAccount should be the 'requestor'")
+
+                // first account request access to content2
+                tx = await instance.requestAccess(1, {from: firstAccount} )
+                
+                eventData = tx.logs[0]
+                status = await instance.getUserStatusForDatum(1,firstAccount)
+                
+                assert.equal(status,1,`Access status should be 1 instead it was ${status}`)
+                assert.equal(eventData.event, "LogAccessRequest", "the event should be called LogAccessRequest")
+                assert.equal(eventData.args.user_id, firstAccount, "the firstAccount should be the 'requestor'")
 
             })
         })
@@ -109,7 +133,6 @@ contract('dataShare', function(accounts) {
                 
                 // retrieve data_index
                 const data_index = await instance.data_index()
-                console.log('data_index : ' + data_index)
                 
                 // loop on the data_id and retrieve all data their locations
                 var content_array = []
@@ -129,7 +152,7 @@ contract('dataShare', function(accounts) {
         })
 
         describe("Manage requests()", async() =>{
-            it.only("Only the owner can grant requests", async() => {
+            it("Only the owner can grant requests", async() => {
                 // deploy two contents
                 await instance.addContent(content1, {from: deployAccount} )
                 await instance.addContent(content2, {from: deployAccount} )
@@ -150,7 +173,7 @@ contract('dataShare', function(accounts) {
                 assert.equal(eventData.args.user, firstAccount, "the firstAccount should be the 'grantee'")
             })
 
-            it.only("Only the owner can refuse requests", async() => {
+            it("Only the owner can refuse requests", async() => {
                 // deploy two contents
                 await instance.addContent(content1, {from: deployAccount} )
                 await instance.addContent(content2, {from: deployAccount} )
@@ -170,7 +193,7 @@ contract('dataShare', function(accounts) {
                 assert.equal(eventData.event, "LogAccessRefused", "the event should be called LogAccessRefused")
                 assert.equal(eventData.args.user, firstAccount, "the firstAccount should be the 'refusee'")
             })
-            it.only("Only the owner can revoke access", async() => {
+            it("Only the owner can revoke access", async() => {
                 // deploy two contents
                 await instance.addContent(content1, {from: deployAccount} )
                 await instance.addContent(content2, {from: deployAccount} )
@@ -202,7 +225,7 @@ contract('dataShare', function(accounts) {
             })
         })
 
-        describe.only("Public Keys management", async() =>{
+        describe("Public Keys management", async() =>{
             it("If the user provides a pubkey with all zeros, it should fail", async() => {
                 // deploy two contents
                 await instance.addContent(content1, {from: deployAccount} )
@@ -224,27 +247,6 @@ contract('dataShare', function(accounts) {
             })
         })
 
-        describe("endSale()", async() => {
-            it("only the owner should be able to end the sale and mark it as closed", async() => {
-                await instance.addEvent(event1.description, event1.website, event1.ticketsAvailable, {from: deployAccount} )
-                await catchRevert(instance.endSale(0, {from: firstAccount}))
-                const txResult = await instance.endSale(0, {from: deployAccount})
-                const eventData = await instance.readEvent(0)
-
-                assert.equal(eventData['4'], false, "The event isOpen variable should be marked false.")
-            })
-
-            it("endSale() should emit an event with information about how much ETH was sent to the contract owner", async() => {
-                const numberToPurchase = 3
-
-                await instance.addEvent(event1.description, event1.website, event1.ticketsAvailable, {from: deployAccount} )
-                await instance.buyTickets(0, numberToPurchase, {from: secondAccount, value: ticketPrice*numberToPurchase})
-                const txResult = await instance.endSale(0, {from: deployAccount})
-                
-                const amount = txResult.logs[0].args['1'].toString()
-
-                assert.equal(amount, ticketPrice*numberToPurchase, "the first emitted event should contain the tranferred amount as the second parameter")
-            })
-        })
+     
     })
 })

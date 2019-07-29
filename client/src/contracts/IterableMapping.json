@@ -6314,18 +6314,18 @@
     "5777": {
       "events": {},
       "links": {},
-      "address": "0xb1454CFD7897e997BB3e0E0223B68D6CED03FB14",
-      "transactionHash": "0x560142177de157aad9ba1fa38ed31cca42493a779d924bc660b441e027d02823"
+      "address": "0xF4816E47809F84e0d0D9ac59381bCaAF61DC69bb",
+      "transactionHash": "0x5ccefc277d8cb0f6e72b67b347cdaa3071ec637901b72a42d8a2fc4b7d45e68b"
     },
     "1564024085856": {
       "events": {},
       "links": {},
-      "address": "0xCb73d698cC0DDedE7b214652BE0002397dc3104C",
-      "transactionHash": "0x85a1130261922ba8c92e0d24558e529684431050228346047829f1332c4beac6"
+      "address": "0x95e3C1C56522ADf8e04Aa8531285F9Ef4d25007F",
+      "transactionHash": "0x90cd815d521a6d2f2b7f1ecdbd75db11950d0df091d8ef91caee221314ea4389"
     }
   },
   "schemaVersion": "3.0.10",
-  "updatedAt": "2019-07-28T21:38:19.124Z",
+  "updatedAt": "2019-07-29T02:02:22.560Z",
   "devdoc": {
     "details": "Models a address -> bool mapping where it is possible to iterate over all keys.",
     "methods": {}

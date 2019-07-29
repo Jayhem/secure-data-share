@@ -40,6 +40,8 @@ contract dataShare is Ownable() {
     event LogContentAdded(uint indexed data_id, bytes32 IPFSaddress);
     event LogDataUpdated(uint indexed data_id, bytes32 indexed IPFSaddress);
 
+    // event debugInt(uint indexed debugUINT);
+
 
     // constructor() public {
     //     // nothing to do except calling ownable constructor
@@ -62,8 +64,10 @@ contract dataShare is Ownable() {
         // This is needed to provide the public key the first time and to notify owner
         // store pubkey, counting on js client to provide correct key.
         // After all, no on is harmed except user if it is wrong
+        require((data_id < data_index), "data does not exist");
         require(isPubKeyNotZero(publicKeyX,publicKeyY), "public key cannot be 0");
         access_list[data_id][msg.sender] = 1;
+        // emit debugInt(access_list[data_id][msg.sender]);
         pubkey memory publicKey = pubkey(publicKeyX,publicKeyY);
         user_keys[msg.sender] = publicKey;
         users[data_id].insert(msg.sender,true);
@@ -74,8 +78,10 @@ contract dataShare is Ownable() {
         // If the public key is already known, this is used to request access from the data owner
         pubkey memory user_key = user_keys[msg.sender];
         // the mapping should provide the default value if there is no entry for the msg.sender
+        require((data_id < data_index), "data does not exist");
         require(isPubKeyNotZero(user_key.x, user_key.y), "public key not provided yet");
         access_list[data_id][msg.sender] = 1;
+        // emit debugInt(access_list[data_id][msg.sender]);
         users[data_id].insert(msg.sender,true);
         emit LogAccessRequest(msg.sender, data_id);
         }
@@ -142,8 +148,10 @@ contract dataShare is Ownable() {
         }
     }
     // for a given data_id and user, the function returns the access status
-    function getUserStatusForDatum(uint data_id, address user) public view returns (uint) {
-        return access_list[data_id][user];
+    function getUserStatusForDatum(uint data_id, address user) public view returns (uint status) {
+        status = access_list[data_id][user];
+        //emit debugInt(status);
+        return status;
     }
 
     // for a given user, return the public key
