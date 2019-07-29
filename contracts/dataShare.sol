@@ -166,8 +166,8 @@ contract dataShare is Ownable() {
                     authorizedCount++;
                 }
             }
-        return authorizedCount;
         }
+        return authorizedCount;
     }
 
     // for a given data_id, the function returns all the addresses that have access
@@ -178,15 +178,14 @@ contract dataShare is Ownable() {
         address[] memory the_users = new address[](array_size);
         for (uint i = 0; i < nb_users ; i++)
         {
-            address current_user = users_by_data[data_id][i];
-            if (user_indexes_by_data[data_id][current_user] != 0) {
-                if (access_list[data_id][current_user] == 2) {
-                    the_users[array_index] = current_user;
+            if (user_indexes_by_data[data_id][users_by_data[data_id][i]] != 0) {
+                if (access_list[data_id][users_by_data[data_id][i]] == 2) {
+                    the_users[array_index] = (users_by_data[data_id][i]);
                     array_index++;
                 }
             }
-        return the_users;
         }
+        return the_users;
     }
         // the function returns the number of requests in 'requested' (i.e. 1) status
     function countPendingRequests() internal view returns (uint) {
@@ -220,7 +219,7 @@ contract dataShare is Ownable() {
             {
                 if (user_indexes_by_data[datum][users_by_data[datum][i]] != 0) {
                     if (access_list[datum][users_by_data[datum][i]] == 1) {
-                        data_ids[array_index] = (i);
+                        data_ids[array_index] = (datum);
                         users[array_index] = (users_by_data[datum][i]);
                         array_index++;
                     }
