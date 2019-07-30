@@ -36,7 +36,7 @@ import IPFSUtil from './utils/multihash';
 class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { ownerData: [], userData : [], web3: null, accounts: null, contract: null };
+    this.state = { ownerData: [], userData : [], web3: null, accounts: null, contract: null, owner : false};
   // state = { web3: null, accounts: null, contract: null };
   }
 
@@ -45,10 +45,11 @@ class App extends React.Component {
       <div className="App">
       <section className="section section-components">
             <Container>
-              <ContentTabs theContent = {this.state.ownerData}/>
+              <ContentTabs theContent={this.state.ownerData} 
+              userContent={this.state.userData}
+              owner={this.state.owner}/>
             </Container>
       </section>
-        <div>The stored value is: {this.state.storageValue}</div>
       </div>
     );
   }
@@ -65,9 +66,8 @@ class App extends React.Component {
         dataShareContract.abi,
         deployedNetwork && deployedNetwork.address,
       );
-      console.log('In the did mount');
       // Set web3, accounts, and contract to the state, and then proceed with an
-      // example of interacting with the contract's methods.
+      // retrieving content from contract's methods.
       this.setState({ web3:web3, accounts:accounts, contract: instance }, this.getContent);
     } catch (error) {
       // Catch any errors for any of the above operations.
@@ -82,27 +82,31 @@ class App extends React.Component {
   async getContent() {
     const { accounts, contract } = this.state;
 
-     // first create some data to retrieve
-    const bs58content1 = "QmarHSr9aSNaPSR6G9KFPbuLV9aEqJfTk1y9B8pdwqK4Rq"
-    const content1 = IPFSUtil.getBytes32FromMultiash(bs58content1).digest
-    await contract.methods.addContent(content1).send({from:accounts[0]});
-   
+    // Are you the owner of the contract?
+    const data_owner = await contract.methods.owner().call();
+    const validOwner = (data_owner === accounts[0]);
 
     // Get the data index from the contract
     const data_index = await contract.methods.data_index().call();
 
+    if (data_index < 2) {
+      // first create some data to retrieve
+      const bs58content1 = "QmarHSr9aSNaPSR6G9KFPbuLV9aEqJfTk1y9B8pdwqK4Rq"
+      const content1 = IPFSUtil.getBytes32FromMultiash(bs58content1).digest
+      await contract.methods.addContent(content1).send({from:accounts[0]});
+    }
+   
 
     // Get the data IPFS location for every datum
     var ownerDataConst = [];
     for (var i = 0; i < data_index; i++) {
       const bytes32hash = await contract.methods.getDataLocation(i).call({from:accounts[0]} );
-      console.log('contract returns location : ' + bytes32hash);
       const multihash = IPFSUtil.getMultihashFromContractResponse(bytes32hash)
       const curr_cont = [i,multihash];
       ownerDataConst.push(curr_cont);
     }
     // Update state with the result.
-    this.setState({ ownerData: ownerDataConst });
+    this.setState({ ownerData: ownerDataConst, owner : validOwner });
   };
 }
 export default App;

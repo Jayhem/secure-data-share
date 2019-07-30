@@ -21,8 +21,14 @@ import classnames from "classnames";
 
 // reactstrap components
 import {
+  Button,
   Card,
   CardBody,
+  Form,
+  FormGroup,
+  Input,
+  Label,
+  Modal,
   NavItem,
   NavLink,
   Nav,
@@ -35,43 +41,143 @@ import {
 class ContentTable extends React.Component {
     render() {
       if (this.props.content.length === 0) {
-        return (<TabPane tabId="noContent">
-        <p className="description">
-          You are not sharing any content. Try it by clicking on the
-          Share content button!
-        </p>
-      </TabPane>)
+        return (
+          <Card className="shadow">
+            <CardBody>
+              <TabContent activeTab={this.props.activeTab}>
+                <TabPane tabId="noContent">
+                  <p className="description">
+                    You are not sharing any content. Try it by clicking on the
+                    Share content button!
+                  </p>
+                </TabPane>
+              </TabContent>
+            </CardBody>
+          </Card >)
       }
       else {
         return ( <TabPane tabId="noContent">
         <p className="description">
-          You are not sharing any content. Try it by clicking on the
-          Share content button!
+          Here is where the content should appear
         </p>
       </TabPane>);
-        for (var i = 0; i<this.props.content.length;i++) {
-            return (<h1> {this.props.content[i]} </h1>);
-        } 
+
       }
-     
-      }
+    }
 }
 
 class TabsSection extends React.Component {
-  state = {
+  constructor(props) {
+    super(props);
+  this.state = {
     iconTabs: 1,
-    OwnerContent: this.props.theContent
+    OwnerContent: this.props.theContent,
+    userContent: this.props.userContent,
+    owner: this.props.owner
   };
+  // This binding is necessary to make `this` work in the callback
+  this.handleSubmit = this.handleSubmit.bind(this);
+  this.handleTextChange = this.handleTextChange.bind(this);
+}
   toggleNavs = (e, state, index) => {
     e.preventDefault();
     this.setState({
       [state]: index
     });
   };
+
+  toggleModal = state => {
+    this.setState({
+      [state]: !this.state[state]
+    });
+  };
+
+  encryptAndStuff = (formdata) => {
+    console.log('the form data is : ' + formdata);
+
+  }
+
+  handleTextChange = (e) => {
+    
+      this.setState({ textcontent: e.target.value });
+    }
+
+  handleSubmit(e) {
+    if(e) {
+      e.preventDefault();}
+    
+    // encryption of data first
+    this.encryptAndStuff(this.state.textcontent);
+    this.toggleModal("defaultModal");
+    }
+
   render() {
+
+    const items = []
+    for (let i=0;i<this.props.theContent.length;i++) {
+      items.push(<li key={this.props.theContent[i][0]}> <Button >{this.props.theContent[i][1]}</Button></li>)
+    }
+
     return (
       <>
-        <h3 className="h4 text-success font-weight-bold mb-4">Data Sharing</h3>
+        <h3 className="h4 text-success font-weight-bold mb-4">Share your data securely leveraging Ethereum keys</h3>
+        <Row className="justify-content-center">
+          <Button 
+          className="btn-1 ml-1" 
+          color="primary" 
+          type="button"
+          onClick={() => this.toggleModal("defaultModal")} >
+            New Content
+          </Button>
+          <Modal
+              className="modal-dialog-centered"
+              isOpen={this.state.defaultModal}
+              toggle={() => this.toggleModal("defaultModal")}
+            >
+              <div className="modal-header">
+                <h6 className="modal-title" id="modal-title-default">
+                  New content
+                </h6>
+                <button
+                  aria-label="Close"
+                  className="close"
+                  data-dismiss="modal"
+                  type="button"
+                  onClick={() => this.toggleModal("defaultModal")}
+                >
+                  <span aria-hidden={true}>×</span>
+                </button>
+              </div>
+              <Form role="form" onSubmit={this.handleSubmit}>
+              <div className="modal-body">
+                <FormGroup>
+                  <Label for="exampleText">Data to share</Label>
+                  <Input type="textarea" placeholder="Enter something to share" name="text" id="exampleText" onChange={this.handleTextChange}/>
+                </FormGroup>              
+                </div>
+              <div className="modal-footer">
+                <Button 
+                color="primary" 
+                type="submit"
+                value="Submit">
+                  Encrypt and share
+                </Button>
+                <Button
+                  className="ml-auto"
+                  color="link"
+                  data-dismiss="modal"
+                  type="button"
+                  onClick={() => this.toggleModal("defaultModal")}
+                >
+                  Close
+                </Button>
+              </div>
+              </Form>
+            </Modal>
+          <Button className="btn-1 ml-1" color="primary" type="button">
+            Manage requests
+                  </Button>
+        </Row>
         <Row className="justify-content-center">
           <Col lg="6">
             <div className="nav-wrapper">
@@ -125,23 +231,12 @@ class TabsSection extends React.Component {
                 </NavItem>
               </Nav>
             </div>
-            <ContentTable content = {this.state.OwnerContent} />
             <Card className="shadow">               
               <CardBody>
                 <TabContent activeTab={"iconTabs" + this.state.iconTabs}>
                   <TabPane tabId="iconTabs1">
-                    <p className="description">
-                      Raw denim you probably haven't heard of them jean shorts
-                      Austin. Nesciunt tofu stumptown aliqua, retro synth master
-                      cleanse. Mustache cliche tempor, williamsburg carles vegan
-                      helvetica. Reprehenderit butcher retro keffiyeh
-                      dreamcatcher synth.
-                    </p>
-                    <p className="description">
-                      Raw denim you probably haven't heard of them jean shorts
-                      Austin. Nesciunt tofu stumptown aliqua, retro synth master
-                      cleanse.
-                    </p>
+                    <div>{items}</div>
+                    <div>{this.props.OwnerContent}</div>
                   </TabPane>
                   <TabPane tabId="iconTabs2">
                     <p className="description">

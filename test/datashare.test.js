@@ -16,8 +16,8 @@ var pk = new BN('1'); // private key as big number
 var pubPoint=G.mul(pk); // EC multiplication to determine public point 
 
 
-const x = pubPoint.getX().toBuffer(); //32 bit x co-ordinate of public point 
-const y = pubPoint.getY().toBuffer(); //32 bit y co-ordinate of public point 
+const x = pubPoint.getX().toBuffer(); //32 byte x co-ordinate of public point 
+const y = pubPoint.getY().toBuffer(); //32 byte y co-ordinate of public point 
 
 var publicKey =Buffer.concat([x,y])
 
@@ -277,14 +277,10 @@ contract('dataShare', function(accounts) {
 
                 // // retrieve all users who have access to content1, which should be none
                 const result = await instance.getAuthorizedUsersForDatum(0, {from:deployAccount})
-                console.log(result);
-                for (i=0;i<result.length;i++) {
-                    console.log('array cointent : ' + result[i])
-                }
                 
                 assert.equal(result[0], firstAccount, `was supposed to be ${firstAccount} instead was ${result[0]}`)
                 assert.equal(result[1], thirdAccount, `was supposed to be ${thirdAccount} instead was ${result[1]}`)
-
+                assert.equal(result.length, 2, `was supposed to be 2 instead was ${result.length}`)
             })
         })
 

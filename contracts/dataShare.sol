@@ -1,6 +1,5 @@
 pragma solidity ^0.5.0;
 import "../node_modules/openzeppelin-solidity/contracts/ownership/ownable.sol";
-import "./iterableMapping.sol";
 
 contract dataShare is Ownable() {
     // defining a struct to hold the public key
