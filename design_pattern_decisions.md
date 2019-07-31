@@ -6,6 +6,9 @@ The main security pattern that was required was that of the owner. The content i
 
 Note that I tried installing the Open Zeppelin contracts with ethpm, but if fails, so I resorted to the npm install method.
 
+## Griefing
+In order to avoid frivolous requests from users, the design makes it so that they have to pay for each transaction to request access to a particular content. In turn, the owner will have to spend gas either granting or refusing the request. The owner can always choose to ignore spurious requests, thus only costing money to the would be attacker.
+
 ## Gas saving patterns
 When implementing a data sharing scheme on the blockchain, one needs to be really careful about how much each action is going to cost, as well as which actions should be taken on the blockchain vs in the dapp client.
 Two main things were made clear early in the design process:
