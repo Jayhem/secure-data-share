@@ -134,9 +134,18 @@ class TabsSection extends React.Component {
     // const aes_key = Sjcl.randomWords(4);
     // const encrypted_shared_key = encrypt(publicKey.toHex(), aes_key).toString()
     // const encrypted_data = Sjcl.encrypt(aes_key, formdata, { mode: 'ccm', iv: Sjcl.random.randomWords(3, 0) });
-    const jsonData = `{medata:{title:${title}},encrypted_data:${content},owner_key:${bad_random},user_keys:[]}`
-    return (jsonData);
+    
+    var jsObject = {};
+    var metadata = {}
+    metadata.title = title;
+    metadata.encrypted_data = content;
+    jsObject.metadata = metadata;
+    jsObject.owner_key = bad_random;
+    jsObject.user_keys = [];
 
+    console.log('at CREATION :metadata : ' + jsObject.metadata);
+    const stringifiedJson = JSON.stringify(jsObject);
+    return (stringifiedJson);
   }
 
   requestAccess = async (e)  => {
@@ -175,7 +184,6 @@ class TabsSection extends React.Component {
     
     // encryption of data first, returns a json data structure
     const JSONcontent = await this.encryptAndStuff(this.state.textcontent, this.state.titlecontent);
-    console.log("JSON : " + JSONcontent);
     // upload content to IPFS
     const IPFShash = await uploadObjectIpfs(JSONcontent);
     console.log(' hash and ' + IPFShash.hash + 'url from uploading :' + IPFShash.url );
@@ -233,7 +241,7 @@ class TabsSection extends React.Component {
     const ownerItems = []
     if (this.props.owner === true) {
     for (let i=0;i<this.props.theContent.length;i++) {
-      ownerItems.push(<li key={this.props.theContent[i][0]} list-style-type="none"> <Button >{this.props.theContent[i][1]}</Button></li>)
+      ownerItems.push(<li key={this.props.theContent[i][0]} list-style-type="none"> <Button >{this.props.allDataDict[i].metadata.title}</Button></li>)
     }
     if (ownerItems.length == 0) {
       ownerItems.push(<div>No content created yet</div>)
@@ -255,7 +263,7 @@ class TabsSection extends React.Component {
                 onChange={this.handleRequestCheckbox}
               />
               <label className="custom-control-label" htmlFor={i}>
-                <span>content: {this.props.pendingRequests[i][0]} user: {this.props.pendingRequests[i][1]}</span>
+                <span>content: {this.props.allDataDict[i].metadata.title} user: {this.props.pendingRequests[i][1]}</span>
               </label>
             </div>
         )
@@ -272,7 +280,7 @@ class TabsSection extends React.Component {
       for (let i=0;i<this.props.userContent.length;i++) {
         sharedItems.push(
         <li key={this.props.userContent[i][0]}> 
-        <Button >{this.props.userContent[i][1]}</Button>
+        <Button >{this.props.allDataDict[i].metadata.title}</Button>
         </li>)
       }
       if (sharedItems.length === 0) {
@@ -287,7 +295,7 @@ class TabsSection extends React.Component {
     var toDiscoverItems = []
     if (this.props.owner === false) {
       for (let i=0;i<this.props.dataToDiscover.length;i++) {
-        toDiscoverItems.push(<li key={this.props.dataToDiscover[i][0]} list-style-type="none"> <Button id={this.props.dataToDiscover[i][1]} onClick={this.requestAccess}>{this.props.dataToDiscover[i][1]}</Button></li>)
+        toDiscoverItems.push(<li key={this.props.dataToDiscover[i][0]} list-style-type="none"> <Button id={this.props.dataToDiscover[i][1]} onClick={this.requestAccess}>{this.props.allDataDict[i].metadata.title}</Button></li>)
         } 
       if (toDiscoverItems.length === 0) {
         toDiscoverItems.push(<div>No (more) content to be discovered</div>)

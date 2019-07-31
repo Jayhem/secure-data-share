@@ -47,7 +47,8 @@ class App extends React.Component {
   owner : false,
   pendingRequests : [],
   dataDict : {},
-  dataToDiscover : []};
+  dataToDiscover : [],
+  allDataDict : {}};
   
   this.handleWeb3Change = this.handleWeb3Change.bind(this);
   this.refreshContractInfo = this.refreshContractInfo.bind(this);
@@ -68,6 +69,7 @@ class App extends React.Component {
               dataDict={this.state.dataDict}
               onWeb3Change={this.handleWeb3Change}
               dataToDiscover={this.state.dataToDiscover}
+              allDataDict={this.state.allDataDict}
               />
             </Container>
       </section>
@@ -132,16 +134,20 @@ class App extends React.Component {
     // from IPFS location to data_id
     // retrieve title and content from IPFS
     var ownerDataConst = [];
-    var dataDict = {}
+    var dataDict = {} // key is IPFS multihash -> data_id
+    var allDataDict = {} // key is data_id -> JSON data
     for (var i = 0; i < data_index; i++) {
       const bytes32hash = await contract.methods.getDataLocation(i).call({from:accounts[0]} );
       const multihash = IPFSUtil.getMultihashFromContractResponse(bytes32hash)
       let ipfs_url = getIpfsUrl(multihash);
       let response = await fetch(ipfs_url);
       let content_detail = await response.json();
-      console.log('jsonified ' + content_detail);
+      let object_content_detail = JSON.parse(content_detail)
+      console.log('objectified ' + object_content_detail);
+      allDataDict[i] = object_content_detail;
+      // console.log('json access of metadata ' + allDataDict[i].metadata);
 
-      const curr_cont = [i,multihash,content_detail];
+      const curr_cont = [i,multihash];
       dataDict[multihash]=i;
       ownerDataConst.push(curr_cont);
     }
@@ -192,7 +198,7 @@ class App extends React.Component {
     }
     // console.log(ownerPendingRequests);
     // Update state with the result.
-    this.setState({ dataToDiscover : dataToDiscover, dataDict: dataDict, ownerData: ownerDataConst, owner : validOwner, pendingRequests : ownerPendingRequests, userContent : userContent});
+    this.setState({ allDataDict:allDataDict, dataToDiscover : dataToDiscover, dataDict: dataDict, ownerData: ownerDataConst, owner : validOwner, pendingRequests : ownerPendingRequests, userContent : userContent});
   };
 }
 export default App;
