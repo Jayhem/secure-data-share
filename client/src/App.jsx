@@ -186,6 +186,7 @@ class App extends React.Component {
     // getAllPendingRequests
     var ownerPendingRequests = []
     const requests = await contract.methods.getAllPendingRequests().call();
+    if (requests) {
     const data_ids = requests[0];
     const users = requests[1];
     console.log('display the requests from contract');
@@ -196,6 +197,7 @@ class App extends React.Component {
       const row = [data_ids[i],users[i]];
       ownerPendingRequests.push(row);
     }
+  }
     // console.log(ownerPendingRequests);
     // Update state with the result.
     this.setState({ allDataDict:allDataDict, dataToDiscover : dataToDiscover, dataDict: dataDict, ownerData: ownerDataConst, owner : validOwner, pendingRequests : ownerPendingRequests, userContent : userContent});

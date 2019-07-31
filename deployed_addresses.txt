@@ -1,0 +1,21 @@
+  On Rinkeby testnet
+  
+   Deploying 'dataShare'
+   ---------------------
+   > transaction hash:    0xd4b13cf6676c23acccd6df828f0f7d0cca2bcbe887ebfec7fac4279c64a84b9e
+   > Blocks: 1            Seconds: 12
+   > contract address:    0xb9A17973E1e6296a8639D747929284fcF3f1858d
+   > block number:        4830617
+   > block timestamp:     1564589191
+   > account:             0x63562BC5cF30b41Eabac532e90760874FcdA9e48
+   > balance:             18.66480352
+   > gas used:            2254399
+   > gas price:           20 gwei
+   > value sent:          0 ETH
+   > total cost:          0.04508798 ETH
+
+
+   > Saving migration to chain.
+   > Saving artifacts
+   -------------------------------------
+   > Total cost:          0.05737172 ETH

@@ -47,7 +47,6 @@ contract dataShare is Ownable() {
     /// @dev Keeps consistency between user_indexes_by_data, users_by_data and access_list
     /// @param data_id The datum identifier to which the user is granted acces
     /// @param user The user(ethereum address) granted acces to the datum
-    /// @return age in years, rounded up for partial years
     function addUserByData(uint data_id, address user) internal {
         // if the user is not yet referenced in the index we can try to add it
         if (user_indexes_by_data[data_id][user] == 0) {
@@ -107,9 +106,6 @@ contract dataShare is Ownable() {
     through the requestAccessWithKey() function.
     */
     /// @param data_id The datum identifier to which the user is granted acces
-    /// @param publicKeyX The Ethereum's public key's X coordinate
-    /// @param publicKeyY The Ethereum's public key's Y coordinate
-    /// @return age in years, rounded up for partial years
     function requestAccess(uint data_id) public {
         pubkey memory user_key = user_keys[msg.sender];
         // the mapping should provide the default value if there is no entry for the msg.sender
@@ -147,7 +143,7 @@ contract dataShare is Ownable() {
     */
     /// @param user The user(ethereum address) granted acces to the datum
     /// @param data_id The datum identifier to which the user is granted acces
-    /// @param IPFSaddress The IPFS digest, allowing to retrieve the encrypted data
+    /// @param newContentLocation The IPFS digest, allowing to retrieve the encrypted data
     function grantAccess(address user, uint data_id, bytes32 newContentLocation) public onlyOwner() {
         access_list[data_id][user] = 2; // 2 means access granted
         data[data_id] = newContentLocation; // because the client has added the sharedKey for user, the content is updated
@@ -175,7 +171,7 @@ contract dataShare is Ownable() {
     */
     /// @param user_id The user(ethereum address) whose access to the datum is being revoked
     /// @param data_id The datum identifier for which the user's access is revoked
-    /// @param IPFSaddress The IPFS digest, allowing to retrieve the encrypted data
+    /// @param newContentLocation The IPFS digest, allowing to retrieve the encrypted data
     function revokeAccess(address user_id, uint data_id, bytes32 newContentLocation) public onlyOwner() {
         removeUserByData(data_id,user_id);
         data[data_id] = newContentLocation; // because the web client has removed the sharedKey for user, the content is updated
