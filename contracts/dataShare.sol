@@ -1,32 +1,38 @@
 pragma solidity ^0.5.0;
 import "../node_modules/openzeppelin-solidity/contracts/ownership/ownable.sol";
-
+/// @title A secure data sharing apparatus
+/// @author Jean-Marc Henry
+/// @notice You can use this contract for sharing data between multiple parties
+/// @dev This contract inherits from Ownable from Zeppelin
 contract dataShare is Ownable() {
-    // defining a struct to hold the public key
+    /// @dev defining a struct to hold the public key 
     struct pubkey{
         bytes32 x;
         bytes32 y;
     }
 
-    // each datum is identifed by data_id, addressed by IPFS hash
-    // datum metadata can be stored in IFPS (title ,description,...)
+    /// @dev each datum is identifed by data_id, addressed by IPFS hash
+    /// @dev datum metadata can be stored in IFPS (title ,description,...)
+    /// @dev then data_index is used to keep track of how many data items exist
     uint public data_index = 0;
     mapping (uint => bytes32) data;
 
-    // for each data_id, there is an array of addresses mapping to a bool to signify if it exists
-    // when a request for access is made the user is added at the end of the users_by_data array
-    // but only if user_indexes_by_data for it is 0, otherwise the index stays the same
-    // when a request is rejected, or access is revoked the user index gets set zero
+    /// @dev for each data_id, there is an array of addresses mapping to a bool to signify if it exists
+    /// @dev when a request for access is made the user is added at the end of the users_by_data array
+    /// @dev but only if user_indexes_by_data for it is 0, otherwise the index stays the same
+    /// @dev when a request is rejected, or access is revoked the user index gets set to zero
+    /// @dev special care was taken when retrieving the users, as some may be there twice but no longer referenced
     mapping(uint => mapping(address => uint)) user_indexes_by_data;
     mapping(uint => address[]) users_by_data;
 
-    // access list for a given datum, by a given user (0 does not exist or was rejected, 1 was requested, 2 granted)
+    /// @dev access list for a given datum, by a given user
+    /// @dev (0 does not exist or was rejected, 1 was requested, 2 granted)
     mapping (uint => mapping(address => uint8)) public access_list;
 
-    // user keys store, from where admin client will retrieve pub keys
+    /// @dev user keys store, from where admin client will retrieve pub keys
     mapping (address => pubkey) public user_keys;
 
-    // Events declarations
+    /// @notice Events declarations
     event LogAccessRequest(address indexed user_id, uint indexed data_id);
     event LogAccessRequestWithPubKey(address indexed user_id, uint indexed data_id, bytes32 publicKeyX,bytes32 publicKeyY);
     event LogAccessGranted(address indexed user, uint indexed data_id, bytes32 IPFSaddress);
@@ -36,19 +42,12 @@ contract dataShare is Ownable() {
     event LogDataUpdated(uint indexed data_id, bytes32 indexed IPFSaddress);
     event LogUsers_by_data();
 
-    // event debugInt(uint indexed debugUINT);
-
-
-    // constructor() public {
-    //     // nothing to do except calling ownable constructor
-    // }
-// no longer needed as the content contains the keys now, which gives no attack surface to any one
-    // modifier dataNotExist(bytes32 IPFSaddress) {
-    //     require(dataIsShared[IPFSaddress],'Data already being shared');
-    //     _;
-    // }
-
-    // Add user - in charge of keeping all the data structures in synch
+    /// @author Jean-Marc Henry
+    /// @notice Internal function used to grant a user access to a datum
+    /// @dev Keeps consistency between user_indexes_by_data, users_by_data and access_list
+    /// @param data_id The datum identifier to which the user is granted acces
+    /// @param user The user(ethereum address) granted acces to the datum
+    /// @return age in years, rounded up for partial years
     function addUserByData(uint data_id, address user) internal {
         // if the user is not yet referenced in the index we can try to add it
         if (user_indexes_by_data[data_id][user] == 0) {
@@ -80,11 +79,19 @@ contract dataShare is Ownable() {
             return true;
         }
     }
-
+    /// @author Jean-Marc Henry
+    /// @notice Request access for a user to a datum, providing his/her her public key
+    /** @dev This function needs to be called only the first time a requests access.
+    Subsequently, the client dapp can call the less gas hungry requestAccess() function.
+    It stores the public key, counting on js client to provide the correct key.
+    After all, no on is harmed except user if it is wrong, therefore there is no need
+    to waste gas on verifying the key is valid. The exception is made here is to check that
+    the key is not 0, as in a mapping this is the equivalent of no entry.
+    */
+    /// @param data_id The datum identifier to which the user is granted acces
+    /// @param publicKeyX The Ethereum's public key's X coordinate
+    /// @param publicKeyY The Ethereum's public key's Y coordinate
     function requestAccessWithKey(uint data_id, bytes32 publicKeyX, bytes32 publicKeyY) public {
-        // This is needed to provide the public key the first time and to notify owner
-        // store pubkey, counting on js client to provide correct key.
-        // After all, no on is harmed except user if it is wrong
         require((data_id < data_index), "data does not exist");
         require(isPubKeyNotZero(publicKeyX,publicKeyY), "public key cannot be 0");
         // emit debugInt(access_list[data_id][msg.sender]);
@@ -94,8 +101,16 @@ contract dataShare is Ownable() {
         emit LogAccessRequestWithPubKey(msg.sender, data_id, publicKeyX, publicKeyY);
         }
 
+    /// @author Jean-Marc Henry
+    /// @notice Request access for a user to a datum
+    /** @dev This function should be called only once the client dapp has provided the public key
+    through the requestAccessWithKey() function.
+    */
+    /// @param data_id The datum identifier to which the user is granted acces
+    /// @param publicKeyX The Ethereum's public key's X coordinate
+    /// @param publicKeyY The Ethereum's public key's Y coordinate
+    /// @return age in years, rounded up for partial years
     function requestAccess(uint data_id) public {
-        // If the public key is already known, this is used to request access from the data owner
         pubkey memory user_key = user_keys[msg.sender];
         // the mapping should provide the default value if there is no entry for the msg.sender
         require((data_id < data_index), "data does not exist");
@@ -104,8 +119,16 @@ contract dataShare is Ownable() {
         // emit debugInt(access_list[data_id][msg.sender]);
         emit LogAccessRequest(msg.sender, data_id);
         }
-
-    // The owner adds content to be shared with others
+    /// @author Jean-Marc Henry
+    /// @notice The owner of the contract can add some new content to share
+    /**  @dev The owner creates content to share, stores it on IPFS. The IPFS hash is stored
+    in the contract. In fact it is only the digest of the multihash that is stored.
+    This has the advantage of saving quite a bit of gas, as only a single block is used
+    to store the digest. On the client side, the multihash needs to be reconstructed.
+    To be noted, that this is NOT forward compatible. If IPFS were to start using a different hash function,
+    it would break the functionality. So far, nothing has changed sinced the project started however.
+    */
+    /// @param IPFSaddress The IPFS digest, allowing to retrieve the encrypted data
     function addContent(bytes32 IPFSaddress) public onlyOwner() {
         uint data_id = data_index;
         data[data_id] = IPFSaddress;
@@ -113,47 +136,74 @@ contract dataShare is Ownable() {
         emit LogContentAdded(data_id, IPFSaddress);
     }
 
-    // grant access to a particular datum, update request entry
-    // because the shared key is stored on IPFS, it will result in a new location
-    // this means the web client has already done all the computation and simply
-    // records it here to share with the users
+    /// @author Jean-Marc Henry
+    /// @notice The data owner grants a user access to a particular datum
+    /**  @dev The owner grants access to request. The reason a new IPFS location is required,
+    is because the data is encrypted with a symmetric key, shared by all users.
+    However, it is encrypted uniquely with each user's public key.
+    Storing the shared key encrypted for each user would be prohibitive on the blockchain.
+    The solution then is to store them on IPFS, thus every time a user is added or removed,
+    the IPFS address will be updated (i.e. because it is the hash of the data it contains).
+    */
+    /// @param user The user(ethereum address) granted acces to the datum
+    /// @param data_id The datum identifier to which the user is granted acces
+    /// @param IPFSaddress The IPFS digest, allowing to retrieve the encrypted data
     function grantAccess(address user, uint data_id, bytes32 newContentLocation) public onlyOwner() {
         access_list[data_id][user] = 2; // 2 means access granted
         data[data_id] = newContentLocation; // because the client has added the sharedKey for user, the content is updated
         emit LogAccessGranted(user, data_id, newContentLocation);
     }
-
-    // the owner has decided to reject a user's request to share data
+    /// @author Jean-Marc Henry
+    /// @notice The owner has decided to reject a user's request to share data
+    /**  @dev The owner refuses to grand access to the request. No need to update
+    the IPFS address as no new key added or content modified. Note the use of
+    the internal removeUserByData() function to keep everything in synch.
+    */
+    /// @param user_id The user(ethereum address) being refused acces to the datum
+    /// @param data_id The datum identifier to which the user is refused acces
     function refuseAccess(address user_id, uint data_id) public onlyOwner(){
         removeUserByData(data_id,user_id);
         emit LogAccessRefused(user_id, data_id);
     }
 
-    // revoke a given user his access to a datum
-    // this is the most complex function, as every one needs a new key
-    // maybe the best way is to have the users each pay/request access again?
-    // then what they do is call the grant access again, or instead I can use broadcast encryption!
-    // This is a great idea I think - how does it work again?
-    // after thinking about it more, I think the better solution is to store the sharedKey in the IPFS document directly
-    // so this means, the only thing that changes is the access list and the IPFS address for the content
+    /// @author Jean-Marc Henry
+    /// @notice The owner has decided to revoke a user's access to data
+    /**  @dev The owner revokes the access of user to some data. This, of course does not mean the user no longer
+    has access to the data, as it is on IPFS, rather it means that any new content added to that shared data will not be accessible.
+    The way it is done is by having the Dapp client generate a new shared key and encrypt it for the remaining users.
+    Since, we do not store the encrypted shared keys on the blockchain, it is not a costly operation.
+    */
+    /// @param user_id The user(ethereum address) whose access to the datum is being revoked
+    /// @param data_id The datum identifier for which the user's access is revoked
+    /// @param IPFSaddress The IPFS digest, allowing to retrieve the encrypted data
     function revokeAccess(address user_id, uint data_id, bytes32 newContentLocation) public onlyOwner() {
         removeUserByData(data_id,user_id);
         data[data_id] = newContentLocation; // because the web client has removed the sharedKey for user, the content is updated
         emit LogAccessRevoked(user_id, data_id, newContentLocation);
     }
-    // function getSharedKey(address user_id, uint data_id) public view returns (bytes32 sharedKey) {
-    //     return sharedKeys[data_id][user_id];
-    // }
+
+    /// @author Jean-Marc Henry
+    /// @notice Retrieve the IPFS location
+    /**  @dev As described above, this will allow retriving the IPFS hash by means of base58 encoding and
+    adding the constants describing the size and hash function used.
+    */
+    /// @param data_id The datum identifier for which we are retrieving the IPFS location
+    /// @return the bytes32 value of the digest of the ipfs hash
     function getDataLocation(uint data_id) public view returns (bytes32 hash) {
         return data[data_id];
     }
 
-    // update encrypted content and/or metadata, but not the keys
+    /// @author Jean-Marc Henry
+    /// @notice update encrypted content and/or metadata, but not the keys
+    /**  @dev To be used when the owner changes something in the data, which will change the ipfs location
+    */
+    /// @param data_id The datum identifier for which we are changing the IPFS location
+    /// @param IPFSaddress The new IPFS digest, allowing to retrieve the encrypted data
     function updateContent(uint data_id, bytes32 IPFSaddress) public onlyOwner() {
         data[data_id] = IPFSaddress;
         emit LogDataUpdated(data_id, IPFSaddress);
     }
-    // for a given data_id count the number of granted requests
+    /// @dev for a given data_id count the number of granted requests
     function countAuthorizedUsers(uint data_id) internal view returns (uint requestCount) {
         uint authorizedCount = 0;
         uint nb_users = users_by_data[data_id].length;
@@ -172,6 +222,12 @@ contract dataShare is Ownable() {
     }
 
     // for a given data_id, the function returns all the addresses that have access
+    /// @author Jean-Marc Henry
+    /// @notice For a given datum, retrive all authorized users
+    /**  @dev Useful to show who has access to what in the UI.
+    */
+    /// @param data_id The datum identifier for which we are retrieving the authorized users
+    /// @return an array of addresses, reprenting the users having access the content
     function getAuthorizedUsersForDatum(uint data_id) public view returns ( address[] memory r_the_users) {
         uint array_index = 0;
         uint array_size = countAuthorizedUsers(data_id);
@@ -206,7 +262,14 @@ contract dataShare is Ownable() {
         return count_requested;
     }
 
-     // The function returns all the pending requests
+    /// @author Jean-Marc Henry
+    /// @notice returns all the pending requests
+    /**  @dev To be used to tell the owner who requested access to what. To be noted, that the data is only
+    meaningful if interpreted as an array of tuples. The (data_id,user) tuple tells you that the user has
+    requested access to the data_id.
+    */
+    /// @return r_data_ids in conjunction with r_users returns an array of tuples (data_id, user)
+    /// @return r_data_ids in conjunction with r_users returns an array of tuples (data_id, user)
     function getAllPendingRequests() external view returns ( uint[] memory r_data_ids, address[] memory r_users) {
         uint array_index = 0;
         uint array_size = countPendingRequests();
@@ -232,14 +295,25 @@ contract dataShare is Ownable() {
     }
 
 
-    // for a given data_id and user, the function returns the access status
+    /// @author Jean-Marc Henry
+    /// @notice for a given data_id and user, the function returns the access status
+    /**  @dev Returns the access status, which can be used to display appropriate info in the UI.
+    The app may want to listen to events, to capture the rejection, approval of access and thus update the UI in
+    a timely manner.
+    */
+    /**  @return status can be requested (1), or granted(2). The value 0 means no access, but it will not be returned as
+    it is the equivalent of no value in a mapping, which is what the data structure uses*/
     function getUserStatusForDatum(uint data_id, address user) public view returns (uint status) {
         status = access_list[data_id][user];
-        //emit debugInt(status);
         return status;
     }
 
-    // for a given user, return the public key
+    /// @author Jean-Marc Henry
+    /// @notice For a given user, returns the public key
+    /**  @dev The public key can then be used to encrypt the shared symmetric key.
+    */
+    ///  @return pubx returns the X coordinate of the public key
+    ///  @return puby returns the Y coordinate of the public key
     function getPublicKey(address user) public view returns (bytes32 pubx, bytes32 puby) {
         return(user_keys[user].x,user_keys[user].y);
     }
