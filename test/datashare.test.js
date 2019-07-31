@@ -228,6 +228,24 @@ contract('dataShare', function(accounts) {
                 assert.equal(users[1],secondAccount,`user wrong ${users[1]}`)
                 assert.equal(users[2],thirdAccount,`user wrong ${users[2]}`)
             })
+            it("Pending requests are returned after refuse and request", async() => {                
+                await instance.refuseAccess(firstAccount, 0, {from: deployAccount})
+                var requests = await instance.getAllPendingRequests()
+                assert.equal(requests.r_data_ids.length,2);
+                // first account request access to content1 again
+                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount})
+
+
+                var requests2 = await instance.getAllPendingRequests()
+                console.log('users after 2nd requests' + requests2.r_users )
+                console.log('data_id after 2nd requests' + requests2.r_users )
+                assert.equal(requests2.r_data_ids.length,3);
+                console.log('users for requests' + users )
+                // assert.equal(users[0],firstAccount,`user wrong ${users[0]}`)
+                // assert.equal(users[1],secondAccount,`user wrong ${users[1]}`)
+                // assert.equal(users[2],thirdAccount,`user wrong ${users[2]}`)
+            })
+
 
         })
 

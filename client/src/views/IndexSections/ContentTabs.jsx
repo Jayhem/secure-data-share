@@ -219,7 +219,7 @@ class TabsSection extends React.Component {
           // console.log("user " + user );
           // console.log("content" + content);
           // console.log("ipfs " + ipfs);
-          await this.props.contract.methods.refuseAccess(user,content,ipfs).send({from:this.props.accounts[0]});
+          await this.props.contract.methods.refuseAccess(user,content).send({from:this.props.accounts[0]});
         } 
       }
       this.props.onWeb3Change();
@@ -271,7 +271,7 @@ class TabsSection extends React.Component {
     if (this.props.owner === false) {
       for (let i=0;i<this.props.userContent.length;i++) {
         sharedItems.push(
-        <li key={"Shared"&&this.props.userContent[i][0]}> 
+        <li key={this.props.userContent[i][0]}> 
         <Button >{this.props.userContent[i][1]}</Button>
         </li>)
       }
@@ -287,7 +287,7 @@ class TabsSection extends React.Component {
     var toDiscoverItems = []
     if (this.props.owner === false) {
       for (let i=0;i<this.props.dataToDiscover.length;i++) {
-        toDiscoverItems.push(<li key={this.props.dataToDiscover[i][0]&&"discover"} list-style-type="none"> <Button id={this.props.dataToDiscover[i][1]&&'discover'} onClick={this.requestAccess}>{this.props.dataToDiscover[i][1]}</Button></li>)
+        toDiscoverItems.push(<li key={this.props.dataToDiscover[i][0]} list-style-type="none"> <Button id={this.props.dataToDiscover[i][1]} onClick={this.requestAccess}>{this.props.dataToDiscover[i][1]}</Button></li>)
         } 
       if (toDiscoverItems.length === 0) {
         toDiscoverItems.push(<div>No (more) content to be discovered</div>)
@@ -423,9 +423,8 @@ class TabsSection extends React.Component {
               className="btn-1 ml-1"
               color="primary"
               type="button"
-              disabled={!this.props.owner}
               onClick={this.props.onWeb3Change} >
-              Refresh contract data
+              Refresh
           </Button>
 
         </Row>

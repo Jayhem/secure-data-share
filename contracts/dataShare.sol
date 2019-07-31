@@ -160,7 +160,9 @@ contract dataShare is Ownable() {
         for (uint i = 0; i < nb_users ; i++)
         {
             address current_user = users_by_data[data_id][i];
-            if (user_indexes_by_data[data_id][current_user] != 0) {
+            // tricky next line - since the user is not removed from the array
+            // you need to verify that the index matches that of user_indexes_by_data[data_id][current_user
+            if (user_indexes_by_data[data_id][current_user] == i) {
                 if (access_list[data_id][current_user] == 2) {
                     authorizedCount++;
                 }
@@ -177,7 +179,7 @@ contract dataShare is Ownable() {
         address[] memory the_users = new address[](array_size);
         for (uint i = 0; i < nb_users ; i++)
         {
-            if (user_indexes_by_data[data_id][users_by_data[data_id][i]] != 0) {
+            if (user_indexes_by_data[data_id][users_by_data[data_id][i]] == i) {
                 if (access_list[data_id][users_by_data[data_id][i]] == 2) {
                     the_users[array_index] = (users_by_data[data_id][i]);
                     array_index++;
@@ -194,7 +196,7 @@ contract dataShare is Ownable() {
             uint nb_users = users_by_data[datum].length;
             for (uint i = 0; i < nb_users; i++)
             {
-                if (user_indexes_by_data[datum][users_by_data[datum][i]] != 0) {
+                if (user_indexes_by_data[datum][users_by_data[datum][i]] == i) {
                     if (access_list[datum][users_by_data[datum][i]] == 1) {
                         count_requested++;
                     }
@@ -216,7 +218,7 @@ contract dataShare is Ownable() {
             uint nb_users = users_by_data[datum].length;
             for (uint i = 0; i < nb_users; i++)
             {
-                if (user_indexes_by_data[datum][users_by_data[datum][i]] != 0) {
+                if (user_indexes_by_data[datum][users_by_data[datum][i]] == i) {
                     if (access_list[datum][users_by_data[datum][i]] == 1) {
                         data_ids[array_index] = (datum);
                         users[array_index] = (users_by_data[datum][i]);
