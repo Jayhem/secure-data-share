@@ -3,6 +3,7 @@ import React from "react";
 // nodejs library that concatenates classes
 import classnames from "classnames";
 
+
 // reactstrap components
 import {
   Badge,
@@ -35,9 +36,20 @@ import IPFSUtil from './utils/multihash';
 
 class App extends React.Component {
   constructor(props) {
-    super(props);
-    this.state = { ownerData: [], userData : [], web3: null, accounts: null, contract: null, owner : false};
-  // state = { web3: null, accounts: null, contract: null };
+  super(props);
+  this.state = { 
+  ownerData: [],
+  userContent : [],
+  web3: null,
+  accounts: null,
+  contract: null,
+  owner : false,
+  pendingRequests : [],
+  dataDict : {},
+  dataToDiscover : []};
+  
+  this.handleWeb3Change = this.handleWeb3Change.bind(this);
+  this.refreshContractInfo = this.refreshContractInfo.bind(this);
   }
 
   render() {
@@ -46,8 +58,15 @@ class App extends React.Component {
       <section className="section section-components">
             <Container>
               <ContentTabs theContent={this.state.ownerData} 
-              userContent={this.state.userData}
-              owner={this.state.owner}/>
+              userContent={this.state.userContent}
+              owner={this.state.owner}
+              web3={this.state.web3}
+              accounts={this.state.accounts}
+              contract={this.state.contract}
+              pendingRequests={this.state.pendingRequests}
+              dataDict={this.state.dataDict}
+              onWeb3Change={this.handleWeb3Change}
+              />
             </Container>
       </section>
       </div>
@@ -68,7 +87,7 @@ class App extends React.Component {
       );
       // Set web3, accounts, and contract to the state, and then proceed with an
       // retrieving content from contract's methods.
-      this.setState({ web3:web3, accounts:accounts, contract: instance }, this.getContent);
+      this.setState({ web3:web3, accounts:accounts, contract: instance }, this.refreshContractInfo);
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -78,8 +97,11 @@ class App extends React.Component {
     }
   };
 
+  async handleWeb3Change() {
+    this.setState({ }, this.refreshContractInfo);
+  }
 
-  async getContent() {
+  async refreshContractInfo() {
     const { accounts, contract } = this.state;
 
     // Are you the owner of the contract?
@@ -92,21 +114,71 @@ class App extends React.Component {
     if (data_index < 2) {
       // first create some data to retrieve
       const bs58content1 = "QmarHSr9aSNaPSR6G9KFPbuLV9aEqJfTk1y9B8pdwqK4Rq"
+      const bs58content2 = "QmarHSr9aSNaPSR6G9KFPbuLV9aEqJfTk1y9B8pdwq5555"
+      if (data_index == 0) {
       const content1 = IPFSUtil.getBytes32FromMultiash(bs58content1).digest
       await contract.methods.addContent(content1).send({from:accounts[0]});
+      }
+      else {
+        const content2 = IPFSUtil.getBytes32FromMultiash(bs58content2).digest
+        await contract.methods.addContent(content2).send({from:accounts[0]});
+      }
     }
    
 
-    // Get the data IPFS location for every datum
+    // Get the data IPFS location for every datum and build a dictionnary
+    // from IPFS location to data_id
     var ownerDataConst = [];
+    var dataDict = {}
     for (var i = 0; i < data_index; i++) {
       const bytes32hash = await contract.methods.getDataLocation(i).call({from:accounts[0]} );
       const multihash = IPFSUtil.getMultihashFromContractResponse(bytes32hash)
       const curr_cont = [i,multihash];
+      dataDict[multihash]=i;
       ownerDataConst.push(curr_cont);
     }
+
+    // get content shared with the user and what he can discover
+    var userContent = [];
+    var dataToDiscover = [];
+
+    if (!validOwner) {
+    for (var i = 0; i < data_index; i++) {
+      const status = await contract.methods.getUserStatusForDatum(i,accounts[0]).call({from:accounts[0]} );
+      console.log("status : " + status + " for content " + i);
+      console.log("ownerData entry : " + ownerDataConst[i]);
+      if (status === 2){
+      userContent.push(ownerDataConst[i]);
+      }
+      }
+    
+  
+    // console.log("user content " + userContent);
+
+    // Building the data to be discovered by the user
+    for (var content in dataDict) {
+      console.log("in discovery : " + content + " contentid : " + dataDict[content]);
+      if (dataDict[content]!= null) {
+        dataToDiscover.push([dataDict[content],content]);
+      }
+    }
+    } 
+
+    // getAllPendingRequests
+    var ownerPendingRequests = []
+    const requests = await contract.methods.getAllPendingRequests().call();
+    const data_ids = requests[0];
+    const users = requests[1];
+    // console.log(users);
+    // console.log(data_ids);
+
+    for (var i = 0; i < data_ids.length; i++) {
+      const row = [data_ids[i],users[i]];
+      ownerPendingRequests.push(row);
+    }
+    // console.log(ownerPendingRequests);
     // Update state with the result.
-    this.setState({ ownerData: ownerDataConst, owner : validOwner });
+    this.setState({ dataToDiscover:dataToDiscover, dataDict: dataDict, ownerData: ownerDataConst, owner : validOwner, pendingRequests : ownerPendingRequests, userContent : userContent});
   };
 }
 export default App;

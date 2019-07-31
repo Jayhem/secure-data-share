@@ -19,6 +19,18 @@ import React from "react";
 // nodejs library that concatenates classes
 import classnames from "classnames";
 
+
+// crypto libraries
+import Sjcl from "sjcl";
+import { encrypt, decrypt, PrivateKey, utils } from 'eciesjs';
+import Ethereumjs from 'ethereumjs-util';
+
+
+// IPFS related
+import { uploadObjectIpfs } from "../../utils/ipfs";
+import IPFSUtil from "../../utils/multihash";
+
+
 // reactstrap components
 import {
   Button,
@@ -37,33 +49,26 @@ import {
   Row,
   Col
 } from "reactstrap";
+import getWeb3 from "../../utils/getWeb3";
 
-class ContentTable extends React.Component {
-    render() {
-      if (this.props.content.length === 0) {
-        return (
-          <Card className="shadow">
-            <CardBody>
-              <TabContent activeTab={this.props.activeTab}>
-                <TabPane tabId="noContent">
-                  <p className="description">
-                    You are not sharing any content. Try it by clicking on the
-                    Share content button!
-                  </p>
-                </TabPane>
-              </TabContent>
-            </CardBody>
-          </Card >)
-      }
-      else {
-        return ( <TabPane tabId="noContent">
-        <p className="description">
-          Here is where the content should appear
-        </p>
-      </TabPane>);
+class ManageRequestModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.toggleModal = this.toggleModal.bind(this);
+  }
 
-      }
-    }
+  toggleModal = state => {
+    this.setState({
+      [state]: !this.state[state]
+    });
+  };
+
+  render() {
+  return (
+    <Row>
+        </Row>
+  )
+  }
 }
 
 class TabsSection extends React.Component {
@@ -71,13 +76,16 @@ class TabsSection extends React.Component {
     super(props);
   this.state = {
     iconTabs: 1,
-    OwnerContent: this.props.theContent,
-    userContent: this.props.userContent,
-    owner: this.props.owner
+    requestCheckboxes : {}
   };
-  // This binding is necessary to make `this` work in the callback
+
+  // These bindings are necessary to make `this` work in the callbacks
   this.handleSubmit = this.handleSubmit.bind(this);
   this.handleTextChange = this.handleTextChange.bind(this);
+  this.requestAccess = this.requestAccess.bind(this);
+  this.handleRequestCheckbox = this.handleRequestCheckbox.bind(this);
+  this.grantRequests = this.grantRequests.bind(this);
+  this.rejectRequests = this.rejectRequests.bind(this);  
 }
   toggleNavs = (e, state, index) => {
     e.preventDefault();
@@ -92,33 +100,204 @@ class TabsSection extends React.Component {
     });
   };
 
-  encryptAndStuff = (formdata) => {
-    console.log('the form data is : ' + formdata);
+  async encryptAndStuff (content,title) {
+    var my_prng = new Sjcl.prng(8);
+    my_prng.startCollectors();
+    const bad_random = Sjcl.random.randomWords(4);
+
+    // trick to extract the public key from a signed transaction
+    const web3 = this.props.web3;
+    const accounts = this.props.accounts;
+    const fake_transaction =  `{from:${accounts[0]},to:${accounts[0]}, value:1}`;
+    var rawTransaction = {
+      "from": accounts[0],
+      "to": accounts[0],
+      "value": "10",
+      "gas": "200000"
+    };
+    // console.log(rawTransaction);
+    // var signed_tx = await web3.eth.signTransaction(rawTransaction);
+    // var signed_tx2 = await web3.eth.value(1).transfer(accounts[0]);
+    // const tx3 = await web3.eth.accounts.signTransaction({to: accounts[0],value: '1000000000',gas: 2000000, gasPrice:200},ownerPrivatekey);
+    // console.log(tx3);
+    // const ownerPublicKey = Ethereumjs.ecrecover(Ethereumjs.toBuffer(tx3.msgHash),tx3.v,tx3.r,tx3.s);
+    // console.log(ownerPublicKey);
+    const ownerPrivatekey = "0x63562bc5cf30b41eabac532e90760874fcda9e48";
+    const userPrivatekey = "0x644beec4b8a18b1cfed82644dd6d3d3b3d105e0a";
+
+
+    
+    // const data = Buffer.from('this is a test')
+    // decrypt(privatekey.toHex(), encrypt(publicKey.toHex(), data)).toString()
+
+    // while (!my_prng.isReady()) {Sjcl.encrypt(bad_random, formdata)}
+    // const aes_key = Sjcl.randomWords(4);
+    // const encrypted_shared_key = encrypt(publicKey.toHex(), aes_key).toString()
+    // const encrypted_data = Sjcl.encrypt(aes_key, formdata, { mode: 'ccm', iv: Sjcl.random.randomWords(3, 0) });
+    const jsonData = `{medata:{title:${title}},encrypted_data:${content},owner_key:${bad_random},user_keys:[]}`
+    return (jsonData);
 
   }
 
+  requestAccess = async (e)  => {
+    // button click on discovery content will request access
+    const hash = e.currentTarget.id;
+    const data_id = this.props.dataDict[hash];
+    const contract = this.props.contract;
+    const pubX = "0x0000000000000000000000000000000000000000000000000000000000000001";
+    const pubY = "0x0000000000000000000000000000000000000000000000000000000000000001";
+    await contract.methods.requestAccessWithKey(data_id,pubX,pubY).send({from:this.props.accounts[0]});
+    this.props.onWeb3Change();
+
+  }
+
+  handleRequestCheckbox = (e) => {
+    // store which checkbox is checked or unchecked
+    const unique_id = [e.currentTarget.id];
+    var requestCheckboxes = this.state.requestCheckboxes;
+    // console.log('the unique id ' + unique_id);
+    // console.log('is it checked? ' + e.currentTarget.checked);
+    requestCheckboxes[unique_id]= e.currentTarget.checked;
+    this.setState({requestCheckboxes:requestCheckboxes})
+  }
+
   handleTextChange = (e) => {
-    
       this.setState({ textcontent: e.target.value });
     }
 
-  handleSubmit(e) {
+  handleTitleChange = (e) => {
+    this.setState({ titlecontent: e.target.value });
+  }
+
+  async handleSubmit(e) {
     if(e) {
       e.preventDefault();}
     
-    // encryption of data first
-    this.encryptAndStuff(this.state.textcontent);
-    this.toggleModal("defaultModal");
+    // encryption of data first, returns a json data structure
+    const JSONcontent = await this.encryptAndStuff(this.state.textcontent, this.state.titlecontent);
+    console.log("JSON : " + JSONcontent);
+    // upload content to IPFS
+    const IPFShash = await uploadObjectIpfs(JSONcontent);
+    console.log(' hash and ' + IPFShash.hash + 'url from uploading :' + IPFShash.url );
+
+    // store IPFS location on blockchain
+    const content1 = IPFSUtil.getBytes32FromMultiash(IPFShash.hash).digest
+    await this.props.contract.methods.addContent(content1).send({from:this.props.accounts[0]});
+
+    this.toggleModal("addContentModal");
+    this.props.onWeb3Change();
     }
+
+    async grantRequests(e) {
+      // this will send a transaction for each request that was selected
+      for (var checkbox in this.state.requestCheckboxes)  {
+        if (this.state.requestCheckboxes[checkbox]) {
+          // checkbox was selected at time of button click
+          // granting request, for now same data location as no key mgt
+          const user = this.props.pendingRequests[checkbox][1];
+          const content = this.props.pendingRequests[checkbox][0];
+          const ipfs = IPFSUtil.getBytes32FromMultiash(this.props.theContent[content][1]).digest;
+          // console.log("user " + user );
+          // console.log("content" + content);
+          // console.log("ipfs " + ipfs);
+          await this.props.contract.methods.grantAccess(user,content,ipfs).send({from:this.props.accounts[0]});
+        } 
+      }
+      this.props.onWeb3Change();
+      this.toggleModal("requestModal");
+    }
+
+    async rejectRequests(e) {
+      // this will send a transaction for each request that was selected
+      for (var checkbox in this.state.requestCheckboxes)  {
+        if (this.state.requestCheckboxes[checkbox]) {
+          // checkbox was selected at time of button click
+          // granting request, for now same data location as no key mgt
+          const user = this.props.pendingRequests[checkbox][1];
+          const content = this.props.pendingRequests[checkbox][0];
+          const ipfs = IPFSUtil.getBytes32FromMultiash(this.props.theContent[content][1]).digest;
+          // console.log("user " + user );
+          // console.log("content" + content);
+          // console.log("ipfs " + ipfs);
+          await this.props.contract.methods.refuseAccess(user,content,ipfs).send({from:this.props.accounts[0]});
+        } 
+      }
+      this.props.onWeb3Change();
+      this.toggleModal("requestModal");
+    }
+
 
   render() {
 
-    const items = []
+    // building owner items list
+    const ownerItems = []
+    if (this.props.owner === true) {
     for (let i=0;i<this.props.theContent.length;i++) {
-      items.push(<li key={this.props.theContent[i][0]}> <Button >{this.props.theContent[i][1]}</Button></li>)
+      ownerItems.push(<li key={this.props.theContent[i][0]} list-style-type="none"> <Button >{this.props.theContent[i][1]}</Button></li>)
+    }
+    if (ownerItems.length == 0) {
+      ownerItems.push(<div>No content created yet</div>)
+    }
+  }
+  else {
+    ownerItems.push(<div>You do not own any content</div>)
+  }
+
+    // building requests items list
+    var requestsItems = [];
+      for (let i = 0; i < this.props.pendingRequests.length; i++) {
+        requestsItems.push(
+            <div className="custom-control custom-checkbox mb-3">
+              <input
+                className="custom-control-input"
+                id={i}
+                type="checkbox"
+                onChange={this.handleRequestCheckbox}
+              />
+              <label className="custom-control-label" htmlFor={i}>
+                <span>content: {this.props.pendingRequests[i][0]} user: {this.props.pendingRequests[i][1]}</span>
+              </label>
+            </div>
+        )
+      }
+      if (requestsItems.length === 0) {
+        requestsItems.push(<div> No requests pending</div>)
+      }
+
+
+    // building list for the content that has been shared with the user
+    var sharedItems = [];
+    console.log("in ContentTabs userContent " +this.props.userContent );
+    if (this.props.owner === false) {
+      for (let i=0;i<this.props.userContent.length;i++) {
+        sharedItems.push(
+        <li key={"Shared"&&this.props.userContent[i][0]}> 
+        <Button >{this.props.userContent[i][1]}</Button>
+        </li>)
+      }
+      if (sharedItems.length === 0) {
+        sharedItems.push(<div>No content shared with you yet</div>)
+      }
+    }
+    else {
+      sharedItems.push(<div>As the owner you already have access to everything</div>)
     }
 
-    return (
+    // building items list for the user to discover 
+    var toDiscoverItems = []
+    if (this.props.owner === false) {
+      for (let i=0;i<this.props.dataToDiscover.length;i++) {
+        toDiscoverItems.push(<li key={this.props.dataToDiscover[i][0]&&"discover"} list-style-type="none"> <Button id={this.props.dataToDiscover[i][1]&&'discover'} onClick={this.requestAccess}>{this.props.dataToDiscover[i][1]}</Button></li>)
+        } 
+      if (toDiscoverItems.length === 0) {
+        toDiscoverItems.push(<div>No (more) content to be discovered</div>)
+      }
+    }
+    else {
+      toDiscoverItems.push(<div>As the owner you already have access to everything</div>)
+    }
+
+      return (
       <>
         <h3 className="h4 text-success font-weight-bold mb-4">Share your data securely leveraging Ethereum keys</h3>
         <Row className="justify-content-center">
@@ -126,13 +305,14 @@ class TabsSection extends React.Component {
           className="btn-1 ml-1" 
           color="primary" 
           type="button"
-          onClick={() => this.toggleModal("defaultModal")} >
+          disabled={!this.props.owner}
+          onClick={() => this.toggleModal("addContentModal")} >
             New Content
           </Button>
           <Modal
               className="modal-dialog-centered"
-              isOpen={this.state.defaultModal}
-              toggle={() => this.toggleModal("defaultModal")}
+              isOpen={this.state.addContentModal}
+              toggle={() => this.toggleModal("addContentModal")}
             >
               <div className="modal-header">
                 <h6 className="modal-title" id="modal-title-default">
@@ -143,7 +323,7 @@ class TabsSection extends React.Component {
                   className="close"
                   data-dismiss="modal"
                   type="button"
-                  onClick={() => this.toggleModal("defaultModal")}
+                  onClick={() => this.toggleModal("addContentModal")}
                 >
                   <span aria-hidden={true}>×</span>
                 </button>
@@ -152,7 +332,8 @@ class TabsSection extends React.Component {
               <div className="modal-body">
                 <FormGroup>
                   <Label for="exampleText">Data to share</Label>
-                  <Input type="textarea" placeholder="Enter something to share" name="text" id="exampleText" onChange={this.handleTextChange}/>
+                  <Input type="textarea" placeholder="Enter title" name="text" id="title" onChange={this.handleTitleChange}/>
+                  <Input type="textarea" placeholder="Enter something to share" name="text" id="maincontent" onChange={this.handleTextChange}/>
                 </FormGroup>              
                 </div>
               <div className="modal-footer">
@@ -167,16 +348,86 @@ class TabsSection extends React.Component {
                   color="link"
                   data-dismiss="modal"
                   type="button"
-                  onClick={() => this.toggleModal("defaultModal")}
+                  onClick={() => this.toggleModal("addContentModal")}
                 >
                   Close
                 </Button>
               </div>
               </Form>
             </Modal>
-          <Button className="btn-1 ml-1" color="primary" type="button">
-            Manage requests
-                  </Button>
+            <Button 
+            className="btn-1 ml-1" 
+            color="primary" 
+            type="button"
+            disabled={!this.props.owner}
+            onClick={() => this.toggleModal("requestModal")} >
+              Manage requests
+            </Button>
+            <Modal
+            className="modal-dialog-centered"
+            isOpen={this.state.requestModal}
+            toggle={() => this.toggleModal("requestModal")}
+            >
+              <div className="modal-header">
+                <h6 className="modal-title" id="modal-title-default">
+                  Pending requests
+                </h6>
+                <button
+                  aria-label="Close"
+                  className="close"
+                  data-dismiss="modal"
+                  type="button"
+                  onClick={() => this.toggleModal("requestModal")}
+                >
+                  <span aria-hidden={true}>×</span>
+                </button>
+              </div>
+              <Form role="form" onSubmit={this.handleSubmit}>
+              <div className="modal-body">
+                <FormGroup>
+                {requestsItems}
+                </FormGroup>              
+                </div>
+              <div className="modal-footer">
+              <Button
+                  className="ml-auto"
+                  color="link"
+                  data-dismiss="modal"
+                  type="button"
+                  onClick={this.grantRequests}
+                >
+                  Grant requests
+                </Button>
+                <Button
+                  className="ml-auto"
+                  color="link"
+                  data-dismiss="modal"
+                  type="button"
+                  onClick={this.rejectRequests}
+                >
+                  Reject requests
+                </Button>
+                <Button
+                  className="ml-auto"
+                  color="link"
+                  data-dismiss="modal"
+                  type="button"
+                  onClick={() => this.toggleModal("requestModal")}
+                >
+                  Close
+                </Button>
+              </div>
+              </Form>
+            </Modal>
+            <Button
+              className="btn-1 ml-1"
+              color="primary"
+              type="button"
+              disabled={!this.props.owner}
+              onClick={this.props.onWeb3Change} >
+              Refresh contract data
+          </Button>
+
         </Row>
         <Row className="justify-content-center">
           <Col lg="6">
@@ -235,25 +486,13 @@ class TabsSection extends React.Component {
               <CardBody>
                 <TabContent activeTab={"iconTabs" + this.state.iconTabs}>
                   <TabPane tabId="iconTabs1">
-                    <div>{items}</div>
-                    <div>{this.props.OwnerContent}</div>
+                    <div>{ownerItems}</div>
                   </TabPane>
                   <TabPane tabId="iconTabs2">
-                    <p className="description">
-                      Cosby sweater eu banh mi, qui irure terry richardson ex
-                      squid. Aliquip placeat salvia cillum iphone. Seitan
-                      aliquip quis cardigan american apparel, butcher voluptate
-                      nisi qui.
-                    </p>
+                    <div>{sharedItems}</div>
                   </TabPane>
                   <TabPane tabId="iconTabs3">
-                    <p className="description">
-                      Raw denim you probably haven't heard of them jean shorts
-                      Austin. Nesciunt tofu stumptown aliqua, retro synth master
-                      cleanse. Mustache cliche tempor, williamsburg carles vegan
-                      helvetica. Reprehenderit butcher retro keffiyeh
-                      dreamcatcher synth.
-                    </p>
+                    <div>{toDiscoverItems}</div>
                   </TabPane>
                 </TabContent>
               </CardBody>

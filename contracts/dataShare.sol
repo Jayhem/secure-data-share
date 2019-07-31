@@ -186,7 +186,6 @@ contract dataShare is Ownable() {
         }
         return the_users;
     }
-        // the function returns the number of requests in 'requested' (i.e. 1) status
     function countPendingRequests() internal view returns (uint) {
         uint count_requested = 0;
         for (uint datum = 0; datum < data_index; datum++)
@@ -207,13 +206,14 @@ contract dataShare is Ownable() {
 
      // The function returns all the pending requests
     function getAllPendingRequests() external view returns ( uint[] memory r_data_ids, address[] memory r_users) {
+        uint array_index = 0;
+        uint array_size = countPendingRequests();
+        uint[] memory data_ids = new uint[](array_size);
+        address[] memory users = new address[](array_size);
+
         for (uint datum = 0; datum < data_index; datum++)
         {
-            uint array_index = 0;
-            uint array_size = countPendingRequests();
             uint nb_users = users_by_data[datum].length;
-            uint[] memory data_ids = new uint[](array_size);
-            address[] memory users = new address[](array_size);
             for (uint i = 0; i < nb_users; i++)
             {
                 if (user_indexes_by_data[datum][users_by_data[datum][i]] != 0) {
@@ -224,9 +224,11 @@ contract dataShare is Ownable() {
                     }
                 }
             }
-        return (data_ids,users);
         }
+        return (data_ids,users);
+
     }
+
 
     // for a given data_id and user, the function returns the access status
     function getUserStatusForDatum(uint data_id, address user) public view returns (uint status) {
@@ -236,7 +238,7 @@ contract dataShare is Ownable() {
     }
 
     // for a given user, return the public key
-    function getPublicKey(address user) public view onlyOwner() returns (bytes32 pubx, bytes32 puby) {
+    function getPublicKey(address user) public view returns (bytes32 pubx, bytes32 puby) {
         return(user_keys[user].x,user_keys[user].y);
     }
 

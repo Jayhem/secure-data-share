@@ -152,14 +152,21 @@ contract('dataShare', function(accounts) {
         })
 
         describe("Manage requests()", async() =>{
-            it("Only the owner can grant requests", async() => {
+            beforeEach("3 users request access to content1", async() =>{
                 // deploy two contents
                 await instance.addContent(content1, {from: deployAccount} )
                 await instance.addContent(content2, {from: deployAccount} )
 
                 // first account request access to content1
-                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount} )
+                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount})
                 
+                // second account requests accesss to content1
+                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: secondAccount})
+
+                // third account request access to content1
+                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: thirdAccount} )
+            });
+            it("Only the owner can grant requests", async() => {                
                 // now first account tries to grant access
                 await catchRevert(instance.grantAccess(firstAccount, 0, content1, {from: firstAccount}))
                 
@@ -173,14 +180,7 @@ contract('dataShare', function(accounts) {
                 assert.equal(eventData.args.user, firstAccount, "the firstAccount should be the 'grantee'")
             })
 
-            it("Only the owner can refuse requests", async() => {
-                // deploy two contents
-                await instance.addContent(content1, {from: deployAccount} )
-                await instance.addContent(content2, {from: deployAccount} )
-
-                // first account request access to content1
-                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount} )
-                
+            it("Only the owner can refuse requests", async() => {                
                 // now first account tries to refuse access
                 await catchRevert(instance.refuseAccess(firstAccount, 0, {from: firstAccount}))
                 
@@ -193,14 +193,7 @@ contract('dataShare', function(accounts) {
                 assert.equal(eventData.event, "LogAccessRefused", "the event should be called LogAccessRefused")
                 assert.equal(eventData.args.user, firstAccount, "the firstAccount should be the 'refusee'")
             })
-            it("Only the owner can revoke access", async() => {
-                // deploy two contents
-                await instance.addContent(content1, {from: deployAccount} )
-                await instance.addContent(content2, {from: deployAccount} )
-
-                // first account request access to content1
-                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount} )
-                
+            it("Only the owner can revoke access", async() => {                
                 // first account request access to content2
                 await instance.requestAccess(1, {from: firstAccount} )
                 
@@ -223,6 +216,19 @@ contract('dataShare', function(accounts) {
                 assert.equal(eventData.args.IPFSaddress, content1, `${content1} should be the new address, instead it was ${eventData.args.IPFSaddress}`)
                 assert.equal(NewIPFSaddress, content1, `${content1} should be the new address, instead it was ${NewIPFSaddress}`)
             })
+            it("All pending requests are returned", async() => {                
+                const requests = await instance.getAllPendingRequests()
+                data_ids = requests.r_data_ids;
+                users = requests.r_users;
+                for (var i=0;i<data_ids.length;i++) {
+                    assert.equal(data_ids[i],0,`data_id should be 0 instead was ${data_ids[i]}`)
+                }
+                console.log('users for requests' + users )
+                assert.equal(users[0],firstAccount,`user wrong ${users[0]}`)
+                assert.equal(users[1],secondAccount,`user wrong ${users[1]}`)
+                assert.equal(users[2],thirdAccount,`user wrong ${users[2]}`)
+            })
+
         })
 
         describe("Public Keys management", async() =>{
@@ -256,7 +262,7 @@ contract('dataShare', function(accounts) {
                 await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount})
                 
                 // second account requests accesss to content1
-                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: firstAccount})
+                await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: secondAccount})
 
                 // third account request access to content1
                 await instance.requestAccessWithKey(0, pub1X, pub1Y, {from: thirdAccount} )
