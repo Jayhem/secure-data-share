@@ -93,12 +93,6 @@ contract('dataShare', function(accounts) {
 
         describe("requestAccess()", async() =>{
             it("The request to access content should be recorded as well as the public key", async() => {
-                // web3.eth.signTransaction(fakeTx, async(receipt) =>{
-                //     console.log(receipt);
-                //     // pubkey = ecRecover(receipt.hash, receipt.v, receipt.r, receipt.s);
-                //     // console.log(pubkey);
-                // });
-                // deploy two contents
                 await instance.addContent(content1, {from: deployAccount} )
                 await instance.addContent(content2, {from: deployAccount} )
 
@@ -223,7 +217,6 @@ contract('dataShare', function(accounts) {
                 for (var i=0;i<data_ids.length;i++) {
                     assert.equal(data_ids[i],0,`data_id should be 0 instead was ${data_ids[i]}`)
                 }
-                console.log('users for requests' + users )
                 assert.equal(users[0],firstAccount,`user wrong ${users[0]}`)
                 assert.equal(users[1],secondAccount,`user wrong ${users[1]}`)
                 assert.equal(users[2],thirdAccount,`user wrong ${users[2]}`)
@@ -237,13 +230,7 @@ contract('dataShare', function(accounts) {
 
 
                 var requests2 = await instance.getAllPendingRequests()
-                console.log('users after 2nd requests' + requests2.r_users )
-                console.log('data_id after 2nd requests' + requests2.r_users )
                 assert.equal(requests2.r_data_ids.length,3);
-                console.log('users for requests' + users )
-                // assert.equal(users[0],firstAccount,`user wrong ${users[0]}`)
-                // assert.equal(users[1],secondAccount,`user wrong ${users[1]}`)
-                // assert.equal(users[2],thirdAccount,`user wrong ${users[2]}`)
             })
 
 

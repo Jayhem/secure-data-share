@@ -27,6 +27,8 @@ import CardsFooter from "./components/Footers/CardsFooter.jsx";
 
 // index page sections
 import ContentTabs from "./views/IndexSections/ContentTabs.jsx";
+import PauseButton from "./views/IndexSections/PauseButton.jsx";
+
 import dataShareContract from "./contracts/dataShare.json";
 import "./App.css";
 
@@ -48,7 +50,8 @@ class App extends React.Component {
   pendingRequests : [],
   dataDict : {},
   dataToDiscover : [],
-  allDataDict : {}};
+  allDataDict : {},
+  paused : false};
   
   this.handleWeb3Change = this.handleWeb3Change.bind(this);
   this.refreshContractInfo = this.refreshContractInfo.bind(this);
@@ -70,6 +73,14 @@ class App extends React.Component {
               onWeb3Change={this.handleWeb3Change}
               dataToDiscover={this.state.dataToDiscover}
               allDataDict={this.state.allDataDict}
+              />
+              <PauseButton paused={this.state.paused}
+              onWeb3Change={this.handleWeb3Change}
+              owner={this.state.owner}
+              web3={this.state.web3}
+              accounts={this.state.accounts}
+              contract={this.state.contract}
+              disabled={this.state.owner}
               />
             </Container>
       </section>
@@ -198,9 +209,14 @@ class App extends React.Component {
       ownerPendingRequests.push(row);
     }
   }
-    // console.log(ownerPendingRequests);
+  // get contract paused state
+  var contractPaused = false;
+  contractPaused = await contract.methods.paused().call();
+
+
+
     // Update state with the result.
-    this.setState({ allDataDict:allDataDict, dataToDiscover : dataToDiscover, dataDict: dataDict, ownerData: ownerDataConst, owner : validOwner, pendingRequests : ownerPendingRequests, userContent : userContent});
+    this.setState({ paused : contractPaused, allDataDict:allDataDict, dataToDiscover : dataToDiscover, dataDict: dataDict, ownerData: ownerDataConst, owner : validOwner, pendingRequests : ownerPendingRequests, userContent : userContent});
   };
 }
 export default App;

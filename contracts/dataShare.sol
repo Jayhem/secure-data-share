@@ -1,32 +1,37 @@
 pragma solidity ^0.5.0;
 import "../node_modules/openzeppelin-solidity/contracts/ownership/ownable.sol";
+import "../node_modules/openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
+
 /// @title A secure data sharing apparatus
 /// @author Jean-Marc Henry
 /// @notice You can use this contract for sharing data between multiple parties
 /// @dev This contract inherits from Ownable from Zeppelin
-contract dataShare is Ownable() {
-    /// @dev defining a struct to hold the public key 
+contract dataShare is Ownable(), Pausable() {
+    /// @dev defining a struct to hold the public key
     struct pubkey{
         bytes32 x;
         bytes32 y;
     }
 
-    /// @dev each datum is identifed by data_id, addressed by IPFS hash
-    /// @dev datum metadata can be stored in IFPS (title ,description,...)
-    /// @dev then data_index is used to keep track of how many data items exist
+    /** @dev each datum is identifed by data_id, addressed by IPFS hash
+    datum metadata can be stored in IFPS (title ,description,...)
+    then data_index is used to keep track of how many data items exist
+    */
     uint public data_index = 0;
     mapping (uint => bytes32) data;
 
-    /// @dev for each data_id, there is an array of addresses mapping to a bool to signify if it exists
-    /// @dev when a request for access is made the user is added at the end of the users_by_data array
-    /// @dev but only if user_indexes_by_data for it is 0, otherwise the index stays the same
-    /// @dev when a request is rejected, or access is revoked the user index gets set to zero
-    /// @dev special care was taken when retrieving the users, as some may be there twice but no longer referenced
+    /** @dev for each data_id, there is an array of addresses mapping to a bool to signify if it exists
+    when a request for access is made the user is added at the end of the users_by_data array
+    but only if user_indexes_by_data for it is 0, otherwise the index stays the same
+    when a request is rejected, or access is revoked the user index gets set to zero
+    special care was taken when retrieving the users, as some may be there twice but no longer referenced
+    */
     mapping(uint => mapping(address => uint)) user_indexes_by_data;
     mapping(uint => address[]) users_by_data;
 
-    /// @dev access list for a given datum, by a given user
-    /// @dev (0 does not exist or was rejected, 1 was requested, 2 granted)
+    /** @dev access list for a given datum, by a given user
+    (0 does not exist or was rejected, 1 was requested, 2 granted)
+    */
     mapping (uint => mapping(address => uint8)) public access_list;
 
     /// @dev user keys store, from where admin client will retrieve pub keys
@@ -133,7 +138,7 @@ contract dataShare is Ownable() {
     }
 
     /// @author Jean-Marc Henry
-    /// @notice The data owner grants a user access to a particular datum
+    /// @notice The data owner grants a user access to a particular datum, if the contract is paused this critical function is disabled
     /**  @dev The owner grants access to request. The reason a new IPFS location is required,
     is because the data is encrypted with a symmetric key, shared by all users.
     However, it is encrypted uniquely with each user's public key.
@@ -144,7 +149,7 @@ contract dataShare is Ownable() {
     /// @param user The user(ethereum address) granted acces to the datum
     /// @param data_id The datum identifier to which the user is granted acces
     /// @param newContentLocation The IPFS digest, allowing to retrieve the encrypted data
-    function grantAccess(address user, uint data_id, bytes32 newContentLocation) public onlyOwner() {
+    function grantAccess(address user, uint data_id, bytes32 newContentLocation) public onlyOwner() whenNotPaused() {
         access_list[data_id][user] = 2; // 2 means access granted
         data[data_id] = newContentLocation; // because the client has added the sharedKey for user, the content is updated
         emit LogAccessGranted(user, data_id, newContentLocation);

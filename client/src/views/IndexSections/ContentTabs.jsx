@@ -49,27 +49,6 @@ import {
   Row,
   Col
 } from "reactstrap";
-import getWeb3 from "../../utils/getWeb3";
-
-class ManageRequestModal extends React.Component {
-  constructor(props) {
-    super(props);
-    this.toggleModal = this.toggleModal.bind(this);
-  }
-
-  toggleModal = state => {
-    this.setState({
-      [state]: !this.state[state]
-    });
-  };
-
-  render() {
-  return (
-    <Row>
-        </Row>
-  )
-  }
-}
 
 class TabsSection extends React.Component {
   constructor(props) {
@@ -254,6 +233,8 @@ class TabsSection extends React.Component {
     // building requests items list
     var requestsItems = [];
       for (let i = 0; i < this.props.pendingRequests.length; i++) {
+        const data_id = this.props.pendingRequests[i][0];
+        console.log('in request builgind, data_id : ' + data_id );
         requestsItems.push(
             <div className="custom-control custom-checkbox mb-3">
               <input
@@ -263,7 +244,7 @@ class TabsSection extends React.Component {
                 onChange={this.handleRequestCheckbox}
               />
               <label className="custom-control-label" htmlFor={i}>
-                <span>content: {this.props.allDataDict[i].metadata.title} user: {this.props.pendingRequests[i][1]}</span>
+                <span>content: {this.props.allDataDict[data_id].metadata.title} user: {this.props.pendingRequests[i][1]}</span>
               </label>
             </div>
         )
@@ -278,9 +259,10 @@ class TabsSection extends React.Component {
     console.log("in ContentTabs userContent " +this.props.userContent );
     if (this.props.owner === false) {
       for (let i=0;i<this.props.userContent.length;i++) {
+        const data_id = this.props.dataDict[this.props.userContent[i][1]];
         sharedItems.push(
         <li key={this.props.userContent[i][0]}> 
-        <Button >{this.props.allDataDict[i].metadata.title}</Button>
+        <Button >{this.props.allDataDict[data_id].metadata.title}</Button>
         </li>)
       }
       if (sharedItems.length === 0) {
@@ -295,7 +277,8 @@ class TabsSection extends React.Component {
     var toDiscoverItems = []
     if (this.props.owner === false) {
       for (let i=0;i<this.props.dataToDiscover.length;i++) {
-        toDiscoverItems.push(<li key={this.props.dataToDiscover[i][0]} list-style-type="none"> <Button id={this.props.dataToDiscover[i][1]} onClick={this.requestAccess}>{this.props.allDataDict[i].metadata.title}</Button></li>)
+        const data_id = this.props.dataDict[this.props.dataToDiscover[i][1]];
+        toDiscoverItems.push(<li key={this.props.dataToDiscover[i][0]} list-style-type="none"> <Button id={this.props.dataToDiscover[i][1]} onClick={this.requestAccess}>{this.props.allDataDict[data_id].metadata.title}</Button></li>)
         } 
       if (toDiscoverItems.length === 0) {
         toDiscoverItems.push(<div>No (more) content to be discovered</div>)

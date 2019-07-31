@@ -1,21 +1,26 @@
   On Rinkeby testnet
   
-   Deploying 'dataShare'
+2_deploy_contracts.js
+=====================
+
+   Replacing 'dataShare'
    ---------------------
-   > transaction hash:    0xd4b13cf6676c23acccd6df828f0f7d0cca2bcbe887ebfec7fac4279c64a84b9e
-   > Blocks: 1            Seconds: 12
-   > contract address:    0xb9A17973E1e6296a8639D747929284fcF3f1858d
-   > block number:        4830617
-   > block timestamp:     1564589191
+   > transaction hash:    0xe3bbcf560f2de76c04cfa7941f6e3808d62c1c8728ba36fbf94078f211fe9df3
+   > Blocks: 0            Seconds: 12
+   > contract address:    0xfdBE0D57B2ad1a3627129b9205cAf06a746724ad
+   > block number:        4832173
+   > block timestamp:     1564612531
    > account:             0x63562BC5cF30b41Eabac532e90760874FcdA9e48
-   > balance:             18.66480352
-   > gas used:            2254399
+   > balance:             17.599966669
+   > gas used:            2897604
    > gas price:           20 gwei
    > value sent:          0 ETH
-   > total cost:          0.04508798 ETH
+   > total cost:          0.05795208 ETH
 
 
    > Saving migration to chain.
    > Saving artifacts
    -------------------------------------
-   > Total cost:          0.05737172 ETH
+   > Total cost:          0.05795208 ETH
+
+
