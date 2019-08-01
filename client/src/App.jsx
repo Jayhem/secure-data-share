@@ -3,19 +3,10 @@ import React from "react";
 // nodejs library that concatenates classes
 import classnames from "classnames";
 
+import {Blockie, PublicAddress} from "rimble-ui";
 
 // reactstrap components
 import {
-  Badge,
-  Button,
-  Card,
-  CardBody,
-  CardImg,
-  FormGroup,
-  Input,
-  InputGroupAddon,
-  InputGroupText,
-  InputGroup,
   Container,
   Row,
   Col
@@ -44,7 +35,7 @@ class App extends React.Component {
   ownerData: [],
   userContent : [],
   web3: null,
-  accounts: null,
+  accounts: [],
   contract: null,
   owner : false,
   pendingRequests : [],
@@ -62,6 +53,9 @@ class App extends React.Component {
       <div className="App">
       <section className="section section-components">
             <Container>
+              <Row>
+              <PublicAddress address={this.state.accounts[0]}/>
+              </Row>
               <ContentTabs theContent={this.state.ownerData} 
               userContent={this.state.userContent}
               owner={this.state.owner}

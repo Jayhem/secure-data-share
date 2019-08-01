@@ -55,7 +55,8 @@ class TabsSection extends React.Component {
     super(props);
   this.state = {
     iconTabs: 1,
-    requestCheckboxes : {}
+    requestCheckboxes : {},
+    fullContentSelected : 0
   };
 
   // These bindings are necessary to make `this` work in the callbacks
@@ -64,7 +65,8 @@ class TabsSection extends React.Component {
   this.requestAccess = this.requestAccess.bind(this);
   this.handleRequestCheckbox = this.handleRequestCheckbox.bind(this);
   this.grantRequests = this.grantRequests.bind(this);
-  this.rejectRequests = this.rejectRequests.bind(this);  
+  this.rejectRequests = this.rejectRequests.bind(this);
+  this.setContent = this.setContent.bind(this);
 }
   toggleNavs = (e, state, index) => {
     e.preventDefault();
@@ -213,6 +215,10 @@ class TabsSection extends React.Component {
       this.toggleModal("requestModal");
     }
 
+    setContent(e, data_id) {
+      this.setState({fullContentSelected : data_id});
+      this.toggleModal("fullContentModal");
+    }
 
   render() {
 
@@ -256,13 +262,14 @@ class TabsSection extends React.Component {
 
     // building list for the content that has been shared with the user
     var sharedItems = [];
-    console.log("in ContentTabs userContent " +this.props.userContent );
+    // console.log("in ContentTabs userContent " +this.props.userContent );
     if (this.props.owner === false) {
       for (let i=0;i<this.props.userContent.length;i++) {
         const data_id = this.props.dataDict[this.props.userContent[i][1]];
         sharedItems.push(
         <li key={this.props.userContent[i][0]}> 
-        <Button >{this.props.allDataDict[data_id].metadata.title}</Button>
+        <Button onClick={(e) => this.setContent(e, data_id)}
+        >{this.props.allDataDict[data_id].metadata.title}</Button>
         </li>)
       }
       if (sharedItems.length === 0) {
@@ -278,7 +285,12 @@ class TabsSection extends React.Component {
     if (this.props.owner === false) {
       for (let i=0;i<this.props.dataToDiscover.length;i++) {
         const data_id = this.props.dataDict[this.props.dataToDiscover[i][1]];
-        toDiscoverItems.push(<li key={this.props.dataToDiscover[i][0]} list-style-type="none"> <Button id={this.props.dataToDiscover[i][1]} onClick={this.requestAccess}>{this.props.allDataDict[data_id].metadata.title}</Button></li>)
+        toDiscoverItems.push(
+        <li key={this.props.dataToDiscover[i][0]} 
+        list-style-type="none"> 
+        <Button id={this.props.dataToDiscover[i][1]} 
+        onClick={this.requestAccess}
+        >{this.props.allDataDict[data_id].metadata.title}</Button></li>)
         } 
       if (toDiscoverItems.length === 0) {
         toDiscoverItems.push(<div>No (more) content to be discovered</div>)
@@ -287,6 +299,59 @@ class TabsSection extends React.Component {
     else {
       toDiscoverItems.push(<div>As the owner you already have access to everything</div>)
     }
+
+    // building full content modal
+
+    // var fullContentModal = []
+    // if (typeof(this.props.allDataDict) == undefined) {
+      
+    //   console.log('supposed to be null: ' + this.props.allDataDict[0]);
+    // }
+    // else {
+    //   console.log(' building modal, allDataDict value, supposed to be not null: ' + this.props.allDataDict[0]);
+    // }
+    // //   console.log('building modal, fullContentSelected value : ' + this.state.fullContentSelected);
+    // fullContentModal.push(
+    // <Modal
+    // className="modal-dialog-centered"
+    // isOpen={this.state.fullContentModal}
+    // toggle={() => this.toggleModal("fullContentModal")}
+    // >
+    //   <div className="modal-header">
+    //     <h6 className="modal-title" id="modal-title-default">
+    //       {this.props.allDataDict[this.state.fullContentSelected][1].metadata.title}
+    //     </h6>
+    //     <button
+    //       aria-label="Close"
+    //       className="close"
+    //       data-dismiss="modal"
+    //       type="button"
+    //       onClick={() => this.toggleModal("fullContentModal")}
+    //     >
+    //       <span aria-hidden={true}>×</span>
+    //     </button>
+    //   </div>
+    //   <div className="modal-body">
+    //     <p>
+    //     {this.props.allDataDict[this.state.fullContentSelected].metadata.encrypted_data}
+    //     </p>
+    //     <p>
+    //       Will display IPFS hash
+    //     </p>
+    //   </div>
+    //   <div className="modal-footer">
+    //     <Button
+    //       className="ml-auto"
+    //       color="link"
+    //       data-dismiss="modal"
+    //       type="button"
+    //       onClick={() => this.toggleModal("fullContentModal")}
+    //     >
+    //       Close
+    //     </Button>
+    //   </div>
+    // </Modal>)
+    // }
 
       return (
       <>

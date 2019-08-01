@@ -1,0 +1,10 @@
+
+> styled-components@4.3.2 postinstall /Users/Jean-Marc/Ethereum-projects/secure-data-share/client/node_modules/styled-components
+> node ./scripts/postinstall.js || exit 0
+
+Use styled-components at work? Consider supporting our development efforts at https://opencollective.com/styled-components
++ styled-components@4.3.2
++ 4@0.0.0
+added 15 packages from 11 contributors and audited 68355 packages in 19.05s
+found 65 vulnerabilities (64 low, 1 high)
+  run `npm audit fix` to fix them, or `npm audit` for details
