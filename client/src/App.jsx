@@ -53,7 +53,7 @@ class App extends React.Component {
       <div className="App">
       <section className="section section-components">
             <Container>
-              <Row>
+              <Row className="justify-content-center">
               <PublicAddress address={this.state.accounts[0]}/>
               </Row>
               <ContentTabs theContent={this.state.ownerData} 
@@ -83,7 +83,7 @@ class App extends React.Component {
   }
   async componentDidMount() {
       try {      
-      this.setState({ }, this.refreshContractInfo);
+      this.setState({ }, this.fetchWeb3);
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -97,21 +97,34 @@ class App extends React.Component {
     this.setState({ }, this.refreshContractInfo);
   }
 
-  async refreshContractInfo() {
+  async fetchWeb3() {
     try {
-          // Get network provider and web3 instance.
-          const  web3 = await getWeb3();
-          // Use web3 to get the user's accounts.
-          const accounts = await web3.eth.getAccounts();
-          // Get the contract instance.
-          const networkId = await web3.eth.net.getId();
-          const deployedNetwork = dataShareContract.networks[networkId];
-          const contract = new web3.eth.Contract(
-            dataShareContract.abi,
-            deployedNetwork && deployedNetwork.address,
-          );
-    
+        // Get network provider and web3 instance.
+        const  web3 = await getWeb3();
+        // Use web3 to get the user's accounts.
+        const accounts = await web3.eth.getAccounts();
+        // Get the contract instance.
+        const networkId = await web3.eth.net.getId();
+        const deployedNetwork = dataShareContract.networks[networkId];
+        const contract = new web3.eth.Contract(
+          dataShareContract.abi,
+          deployedNetwork && deployedNetwork.address,
+        );
+      this.setState({web3:web3, accounts:accounts, contract: contract }, this.refreshContractInfo);
 
+    }
+  catch (error) {
+    // Catch any errors for any of the above operations.
+    console.error(error);
+  }
+};
+
+
+  async refreshContractInfo() {
+    
+    try {
+      const contract = this.state.contract;
+      const accounts = this.state.accounts;
     // Are you the owner of the contract?
     const data_owner = await contract.methods.owner().call();
     const validOwner = (data_owner === accounts[0]);
@@ -209,7 +222,7 @@ class App extends React.Component {
 
 
     // Update state with the result.
-    this.setState({ web3:web3, accounts:accounts, contract: contract, paused : contractPaused, allDataDict:allDataDict, dataToDiscover : dataToDiscover, dataDict: dataDict, ownerData: ownerDataConst, owner : validOwner, pendingRequests : ownerPendingRequests, userContent : userContent});
+    this.setState({ paused : contractPaused, allDataDict:allDataDict, dataToDiscover : dataToDiscover, dataDict: dataDict, ownerData: ownerDataConst, owner : validOwner, pendingRequests : ownerPendingRequests, userContent : userContent});
   } catch (error) {
     // Catch any errors for any of the above operations.
     console.error(error);
