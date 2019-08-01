@@ -36,7 +36,7 @@ class App extends React.Component {
   userContent : [],
   web3: null,
   accounts: [],
-  contract: null,
+  contract: {},
   owner : false,
   pendingRequests : [],
   dataDict : {},
@@ -82,21 +82,8 @@ class App extends React.Component {
     );
   }
   async componentDidMount() {
-      try {
-      // Get network provider and web3 instance.
-      const  web3 = await getWeb3();
-      // Use web3 to get the user's accounts.
-      const accounts = await web3.eth.getAccounts();
-      // Get the contract instance.
-      const networkId = await web3.eth.net.getId();
-      const deployedNetwork = dataShareContract.networks[networkId];
-      const instance = new web3.eth.Contract(
-        dataShareContract.abi,
-        deployedNetwork && deployedNetwork.address,
-      );
-      // Set web3, accounts, and contract to the state, and then proceed with an
-      // retrieving content from contract's methods.
-      this.setState({ web3:web3, accounts:accounts, contract: instance }, this.refreshContractInfo);
+      try {      
+      this.setState({ }, this.refreshContractInfo);
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -111,7 +98,19 @@ class App extends React.Component {
   }
 
   async refreshContractInfo() {
-    const { accounts, contract } = this.state;
+    try {
+          // Get network provider and web3 instance.
+          const  web3 = await getWeb3();
+          // Use web3 to get the user's accounts.
+          const accounts = await web3.eth.getAccounts();
+          // Get the contract instance.
+          const networkId = await web3.eth.net.getId();
+          const deployedNetwork = dataShareContract.networks[networkId];
+          const contract = new web3.eth.Contract(
+            dataShareContract.abi,
+            deployedNetwork && deployedNetwork.address,
+          );
+    
 
     // Are you the owner of the contract?
     const data_owner = await contract.methods.owner().call();
@@ -210,7 +209,11 @@ class App extends React.Component {
 
 
     // Update state with the result.
-    this.setState({ paused : contractPaused, allDataDict:allDataDict, dataToDiscover : dataToDiscover, dataDict: dataDict, ownerData: ownerDataConst, owner : validOwner, pendingRequests : ownerPendingRequests, userContent : userContent});
+    this.setState({ web3:web3, accounts:accounts, contract: contract, paused : contractPaused, allDataDict:allDataDict, dataToDiscover : dataToDiscover, dataDict: dataDict, ownerData: ownerDataConst, owner : validOwner, pendingRequests : ownerPendingRequests, userContent : userContent});
+  } catch (error) {
+    // Catch any errors for any of the above operations.
+    console.error(error);
+  }
   };
 }
 export default App;

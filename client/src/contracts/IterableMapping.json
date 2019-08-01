@@ -6397,7 +6397,7 @@
     }
   },
   "schemaVersion": "3.0.10",
-  "updatedAt": "2019-07-31T22:35:47.407Z",
+  "updatedAt": "2019-08-01T02:20:21.753Z",
   "devdoc": {
     "details": "Models a address -> bool mapping where it is possible to iterate over all keys.",
     "methods": {}
