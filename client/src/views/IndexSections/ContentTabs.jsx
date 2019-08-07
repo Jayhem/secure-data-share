@@ -49,13 +49,17 @@ import {
   Row,
   Col
 } from "reactstrap";
+import FullContentModal from "./FullContentModal";
+import ErrorBoundary from "./ErrorBoundary"
 
 class TabsSection extends React.Component {
   constructor(props) {
     super(props);
+    console.log('in ContentTabs constructor')
   this.state = {
     iconTabs: 1,
     requestCheckboxes : {},
+    contentSelected : 0,
     fullContentSelected : 0
   };
 
@@ -66,7 +70,7 @@ class TabsSection extends React.Component {
   this.handleRequestCheckbox = this.handleRequestCheckbox.bind(this);
   this.grantRequests = this.grantRequests.bind(this);
   this.rejectRequests = this.rejectRequests.bind(this);
-  this.setContent = this.setContent.bind(this);
+  // this.setContent = this.setContent.bind(this);
 }
   toggleNavs = (e, state, index) => {
     e.preventDefault();
@@ -75,9 +79,10 @@ class TabsSection extends React.Component {
     });
   };
 
-  toggleModal = state => {
+  toggleModal = (state, index) => {
     this.setState({
-      [state]: !this.state[state]
+      [state]: !this.state[state],
+      contentSelected : index
     });
   };
 
@@ -124,7 +129,7 @@ class TabsSection extends React.Component {
     jsObject.owner_key = bad_random;
     jsObject.user_keys = [];
 
-    console.log('at CREATION :metadata : ' + jsObject.metadata);
+    // console.log('at CREATION :metadata : ' + jsObject.metadata);
     const stringifiedJson = JSON.stringify(jsObject);
     return (stringifiedJson);
   }
@@ -167,7 +172,7 @@ class TabsSection extends React.Component {
     const JSONcontent = await this.encryptAndStuff(this.state.textcontent, this.state.titlecontent);
     // upload content to IPFS
     const IPFShash = await uploadObjectIpfs(JSONcontent);
-    console.log(' hash and ' + IPFShash.hash + 'url from uploading :' + IPFShash.url );
+    // console.log(' hash and ' + IPFShash.hash + 'url from uploading :' + IPFShash.url );
 
     // store IPFS location on blockchain
     const content1 = IPFSUtil.getBytes32FromMultiash(IPFShash.hash).digest
@@ -215,18 +220,31 @@ class TabsSection extends React.Component {
       this.toggleModal("requestModal");
     }
 
-    setContent(e, data_id) {
-      this.setState({fullContentSelected : data_id});
-      this.toggleModal("fullContentModal");
-    }
+    // setContent(e, data_id) {
+    //   this.setState({fullContentSelected : data_id});
+    //   this.toggleModal("fullContentModal",this.props.theContent[i][0]);
+    // }
 
+  async componentDidMount() {
+    console.log('in ContentTabs componentDidMount')
+    await this.props.onWeb3Change;
+  }
   render() {
+    console.log('in ContentTabs render')
+
+    if (this.props.contractReady) {
+      console.log('in ContentTabs render - contract is ready')
 
     // building owner items list
     const ownerItems = []
     if (this.props.owner === true) {
     for (let i=0;i<this.props.theContent.length;i++) {
-      ownerItems.push(<li key={this.props.theContent[i][0]} list-style-type="none"> <Button >{this.props.allDataDict[i].metadata.title}</Button></li>)
+      ownerItems.push(
+      <li key={this.props.theContent[i][0]} 
+      list-style-type="none"> 
+      <Button onClick={() => this.toggleModal("fullContentModal",this.props.theContent[i][0])}>
+      {this.props.allDataDict[i].metadata.title}
+      </Button></li>)
     }
     if (ownerItems.length == 0) {
       ownerItems.push(<div>No content created yet</div>)
@@ -240,14 +258,14 @@ class TabsSection extends React.Component {
     var requestsItems = [];
       for (let i = 0; i < this.props.pendingRequests.length; i++) {
         const data_id = this.props.pendingRequests[i][0];
-        console.log('in request builgind, data_id : ' + data_id );
+        // console.log('in request builgind, data_id : ' + data_id );
         requestsItems.push(
             <div className="custom-control custom-checkbox mb-3">
               <input
                 className="custom-control-input"
                 id={i}
                 type="checkbox"
-                onChange={this.handleRequestCheckbox}
+                onChange={() => this.handleRequestCheckbox}
               />
               <label className="custom-control-label" htmlFor={i}>
                 <span>content: {this.props.allDataDict[data_id].metadata.title} user: {this.props.pendingRequests[i][1]}</span>
@@ -256,7 +274,7 @@ class TabsSection extends React.Component {
         )
       }
       if (requestsItems.length === 0) {
-        requestsItems.push(<div> No requests pending</div>)
+        requestsItems.push(<li id='noreqs'> No requests pending</li>)
       }
 
 
@@ -289,7 +307,7 @@ class TabsSection extends React.Component {
         <li key={this.props.dataToDiscover[i][0]} 
         list-style-type="none"> 
         <Button id={this.props.dataToDiscover[i][1]} 
-        onClick={this.requestAccess}
+        onClick={() => this.requestAccess}
         >{this.props.allDataDict[data_id].metadata.title}</Button></li>)
         } 
       if (toDiscoverItems.length === 0) {
@@ -299,59 +317,6 @@ class TabsSection extends React.Component {
     else {
       toDiscoverItems.push(<div>As the owner you already have access to everything</div>)
     }
-
-    // building full content modal
-
-    // var fullContentModal = []
-    // if (typeof(this.props.allDataDict) == undefined) {
-      
-    //   console.log('supposed to be null: ' + this.props.allDataDict[0]);
-    // }
-    // else {
-    //   console.log(' building modal, allDataDict value, supposed to be not null: ' + this.props.allDataDict[0]);
-    // }
-    // //   console.log('building modal, fullContentSelected value : ' + this.state.fullContentSelected);
-    // fullContentModal.push(
-    // <Modal
-    // className="modal-dialog-centered"
-    // isOpen={this.state.fullContentModal}
-    // toggle={() => this.toggleModal("fullContentModal")}
-    // >
-    //   <div className="modal-header">
-    //     <h6 className="modal-title" id="modal-title-default">
-    //       {this.props.allDataDict[this.state.fullContentSelected][1].metadata.title}
-    //     </h6>
-    //     <button
-    //       aria-label="Close"
-    //       className="close"
-    //       data-dismiss="modal"
-    //       type="button"
-    //       onClick={() => this.toggleModal("fullContentModal")}
-    //     >
-    //       <span aria-hidden={true}>×</span>
-    //     </button>
-    //   </div>
-    //   <div className="modal-body">
-    //     <p>
-    //     {this.props.allDataDict[this.state.fullContentSelected].metadata.encrypted_data}
-    //     </p>
-    //     <p>
-    //       Will display IPFS hash
-    //     </p>
-    //   </div>
-    //   <div className="modal-footer">
-    //     <Button
-    //       className="ml-auto"
-    //       color="link"
-    //       data-dismiss="modal"
-    //       type="button"
-    //       onClick={() => this.toggleModal("fullContentModal")}
-    //     >
-    //       Close
-    //     </Button>
-    //   </div>
-    // </Modal>)
-    // }
 
       return (
       <>
@@ -438,7 +403,7 @@ class TabsSection extends React.Component {
                   <span aria-hidden={true}>×</span>
                 </button>
               </div>
-              <Form role="form" onSubmit={this.handleSubmit}>
+              <Form role="form" onSubmit={() => this.handleSubmit}>
               <div className="modal-body">
                 <FormGroup>
                 {requestsItems}
@@ -450,7 +415,7 @@ class TabsSection extends React.Component {
                   color="link"
                   data-dismiss="modal"
                   type="button"
-                  onClick={this.grantRequests}
+                  onClick={() => this.grantRequests}
                 >
                   Grant requests
                 </Button>
@@ -459,7 +424,7 @@ class TabsSection extends React.Component {
                   color="link"
                   data-dismiss="modal"
                   type="button"
-                  onClick={this.rejectRequests}
+                  onClick={() => this.rejectRequests}
                 >
                   Reject requests
                 </Button>
@@ -475,11 +440,21 @@ class TabsSection extends React.Component {
               </div>
               </Form>
             </Modal>
+            <FullContentModal
+              key = "fullcontentModal"
+              className="modal-dialog-centered"
+              isOpen={this.state.fullContentModal}
+              contractReady={this.props.contractReady} 
+              allDataDict={this.props.allDataDict}
+              contentSelected={this.state.contentSelected}
+              toggleFullModal={() => this.toggleModal("fullContentModal",this.state.contentSelected)}
+               />
             <Button
+            key="refreshWeb3Content"
               className="btn-1 ml-1"
               color="primary"
               type="button"
-              onClick={this.props.onWeb3Change} >
+              onClick={() => this.props.onWeb3Change} >
               Refresh
           </Button>
 
@@ -557,6 +532,19 @@ class TabsSection extends React.Component {
       </>
     );
   }
+  else {
+    console.log('in ContentTabs render - contract not ready')
+    return (
+      <>
+        <h3 className="h4 text-success font-weight-bold mb-4">Share your data securely leveraging Ethereum keys</h3>
+        <Row className="justify-content-center">
+          <div>Contract not ready or readable</div>
+          </Row>
+      </>
+      );
+  }
+}
+
 }
 
 export default TabsSection;

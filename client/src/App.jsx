@@ -19,8 +19,8 @@ import CardsFooter from "./components/Footers/CardsFooter.jsx";
 // index page sections
 import ContentTabs from "./views/IndexSections/ContentTabs.jsx";
 import PauseButton from "./views/IndexSections/PauseButton.jsx";
-
-import dataShareContract from "./contracts/dataShare.json";
+import ErrorBoundary from "./views/IndexSections/ErrorBoundary.jsx";
+import DataShareContract from "./contracts/dataShare.json";
 import "./App.css";
 
 //web3 stuff
@@ -31,6 +31,7 @@ import {getIpfsUrl} from "./utils/ipfs.js"
 class App extends React.Component {
   constructor(props) {
   super(props);
+  console.log('in Apps constructor')
   this.state = { 
   ownerData: [],
   userContent : [],
@@ -42,48 +43,70 @@ class App extends React.Component {
   dataDict : {},
   dataToDiscover : [],
   allDataDict : {},
-  paused : false};
+  paused : false,
+  contractReady : false};
   
   this.handleWeb3Change = this.handleWeb3Change.bind(this);
   this.refreshContractInfo = this.refreshContractInfo.bind(this);
   }
 
   render() {
-    return (
-      <div className="App">
+    console.log('in Apps render');
+    var items = [];
+    if (!this.state.contractReady) {
+      console.log('in Apps render - contract not ready');
+      items.push(<div className="App">
       <section className="section section-components">
             <Container>
-              <Row className="justify-content-center">
-              <PublicAddress address={this.state.accounts[0]}/>
-              </Row>
-              <ContentTabs theContent={this.state.ownerData} 
-              userContent={this.state.userContent}
-              owner={this.state.owner}
-              web3={this.state.web3}
-              accounts={this.state.accounts}
-              contract={this.state.contract}
-              pendingRequests={this.state.pendingRequests}
-              dataDict={this.state.dataDict}
-              onWeb3Change={this.handleWeb3Change}
-              dataToDiscover={this.state.dataToDiscover}
-              allDataDict={this.state.allDataDict}
-              />
-              <PauseButton paused={this.state.paused}
-              onWeb3Change={this.handleWeb3Change}
-              owner={this.state.owner}
-              web3={this.state.web3}
-              accounts={this.state.accounts}
-              contract={this.state.contract}
-              disabled={this.state.owner}
-              />
+            <Row className="justify-content-center"></Row>
             </Container>
       </section>
-      </div>
-    );
+      </div>);
+    }
+    else {
+      console.log('in Apps render - contract is ready');
+      items.push(
+        <div className="App">
+        <section className="section section-components">
+              <Container>
+                <Row className="justify-content-center">
+                <ErrorBoundary>
+                <PublicAddress address={this.state.accounts[0]}/>
+                </ErrorBoundary>
+                </Row>
+                <ContentTabs theContent={this.state.ownerData} 
+                userContent={this.state.userContent}
+                owner={this.state.owner}
+                web3={this.state.web3}
+                accounts={this.state.accounts}
+                contract={this.state.contract}
+                pendingRequests={this.state.pendingRequests}
+                dataDict={this.state.dataDict}
+                onWeb3Change={this.handleWeb3Change}
+                dataToDiscover={this.state.dataToDiscover}
+                allDataDict={this.state.allDataDict}
+                contractReady={this.state.contractReady}
+                />
+                <PauseButton paused={this.state.paused}
+                onWeb3Change={this.handleWeb3Change}
+                owner={this.state.owner}
+                web3={this.state.web3}
+                accounts={this.state.accounts}
+                contract={this.state.contract}
+                disabled={this.state.owner}
+                contractReady={this.state.contractReady}
+                />
+              </Container>
+        </section>
+        </div>
+      );
+    }
+    return items;
   }
   async componentDidMount() {
+    console.log('in Apps componentDidMount - start')
       try {      
-      this.setState({ }, this.fetchWeb3);
+      this.setState({ }, await this.fetchWeb3);
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -91,10 +114,11 @@ class App extends React.Component {
       );
       console.error(error);
     }
+    console.log('in Apps componentDidMount - end')
   };
 
   async handleWeb3Change() {
-    this.setState({ }, this.refreshContractInfo);
+    this.setState({ }, await this.refreshContractInfo);
   }
 
   async fetchWeb3() {
@@ -105,12 +129,12 @@ class App extends React.Component {
         const accounts = await web3.eth.getAccounts();
         // Get the contract instance.
         const networkId = await web3.eth.net.getId();
-        const deployedNetwork = dataShareContract.networks[networkId];
+        const deployedNetwork = DataShareContract.networks[networkId];
         const contract = new web3.eth.Contract(
-          dataShareContract.abi,
+          DataShareContract.abi,
           deployedNetwork && deployedNetwork.address,
         );
-      this.setState({web3:web3, accounts:accounts, contract: contract }, this.refreshContractInfo);
+      this.setState({web3:web3, accounts:accounts, contract: contract }, await this.refreshContractInfo);
 
     }
   catch (error) {
@@ -121,10 +145,10 @@ class App extends React.Component {
 
 
   async refreshContractInfo() {
-    
     try {
       const contract = this.state.contract;
       const accounts = this.state.accounts;
+      
     // Are you the owner of the contract?
     const data_owner = await contract.methods.owner().call();
     const validOwner = (data_owner === accounts[0]);
@@ -222,7 +246,9 @@ class App extends React.Component {
 
 
     // Update state with the result.
-    this.setState({ paused : contractPaused, allDataDict:allDataDict, dataToDiscover : dataToDiscover, dataDict: dataDict, ownerData: ownerDataConst, owner : validOwner, pendingRequests : ownerPendingRequests, userContent : userContent});
+    const contractReady = true;
+    this.setState({ contractReady : contractReady, paused : contractPaused, allDataDict:allDataDict, dataToDiscover : dataToDiscover, dataDict: dataDict, ownerData: ownerDataConst, owner : validOwner, pendingRequests : ownerPendingRequests, userContent : userContent});
+    
   } catch (error) {
     // Catch any errors for any of the above operations.
     console.error(error);

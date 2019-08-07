@@ -6,6 +6,7 @@ import './index.css';
 import App from './App';
 import * as serviceWorker from './serviceWorker';
 
+import * as Sentry from '@sentry/browser';
 
 /*!
 
@@ -36,6 +37,9 @@ import Landing from "./views/examples/Landing.jsx";
 import Login from "./views/examples/Login.jsx";
 import Profile from "./views/examples/Profile.jsx";
 import Register from "./views/examples/Register.jsx";
+
+
+Sentry.init({dsn: "https://ca9176017a46450f9eb1fb59b0b5924b@sentry.io/1520978"});
 
 
 ReactDOM.render(

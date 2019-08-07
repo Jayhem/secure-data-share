@@ -22861,12 +22861,18 @@
         }
       },
       "links": {},
-      "address": "0x7c7FEBc491D56Bcc3607Ddc2B55418122c8544ec",
-      "transactionHash": "0x7e51b2c619f4729685fc92cf49130922147876d5c440b9d642107fcf96b81a4d"
+      "address": "0xab2ef7c30803f9D181C9ED30ba48AAa47c216CCD",
+      "transactionHash": "0xeb7fe0b4a511467de132f406285cc4acfa1a66147319526b72a28b65eae938b2"
+    },
+    "1564934924194": {
+      "events": {},
+      "links": {},
+      "address": "0xFE987c757F7E2048F074BE9F4dA17713F5cFF1E8",
+      "transactionHash": "0xc7994d00ea2632788e8f15f9f48e4bed4e8bee7f0806bec98c879bdaa8020b67"
     }
   },
   "schemaVersion": "3.0.10",
-  "updatedAt": "2019-08-01T03:12:34.528Z",
+  "updatedAt": "2019-08-04T16:09:59.771Z",
   "devdoc": {
     "author": "Jean-Marc Henry",
     "details": "This contract inherits from Ownable from Zeppelin",
