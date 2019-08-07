@@ -447,6 +447,7 @@ class TabsSection extends React.Component {
               contractReady={this.props.contractReady} 
               allDataDict={this.props.allDataDict}
               contentSelected={this.state.contentSelected}
+              ownerData={this.props.theContent}
               toggleFullModal={() => this.toggleModal("fullContentModal",this.state.contentSelected)}
                />
             <Button

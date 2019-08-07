@@ -22,6 +22,7 @@ import {
   Button,
   Modal
 } from "reactstrap";
+import { getIpfsUrl } from "../../utils/ipfs";
 
 
 class FullContentModal extends React.Component {
@@ -67,9 +68,10 @@ class FullContentModal extends React.Component {
             </button>
           </div>
           <div className="modal-body">
-            <p>
-            {this.props.allDataDict[this.props.contentSelected].metadata.encrypted_data}
-            </p>
+              <p>{this.props.allDataDict[this.props.contentSelected].metadata.encrypted_data}</p>
+            <a href = {getIpfsUrl(this.props.ownerData[this.props.contentSelected][1])}>
+                See the complete information on IPFS
+            </a>
           </div>
           <div className="modal-footer">
             <Button
