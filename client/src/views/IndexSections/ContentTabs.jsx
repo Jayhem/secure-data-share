@@ -79,7 +79,9 @@ class TabsSection extends React.Component {
     });
   };
 
-  toggleModal = (state, index) => {
+  toggleModal = (state, r_index) => {
+    var index = 0;
+    if (r_index) index = r_index; 
     this.setState({
       [state]: !this.state[state],
       contentSelected : index
@@ -184,10 +186,12 @@ class TabsSection extends React.Component {
 
     async grantRequests(e) {
       // this will send a transaction for each request that was selected
+      console.log('Granting requests for selected content')
       for (var checkbox in this.state.requestCheckboxes)  {
         if (this.state.requestCheckboxes[checkbox]) {
           // checkbox was selected at time of button click
           // granting request, for now same data location as no key mgt
+          console.log('selected content : ' + this.props.pendingRequests[checkbox][0]);
           const user = this.props.pendingRequests[checkbox][1];
           const content = this.props.pendingRequests[checkbox][0];
           const ipfs = IPFSUtil.getBytes32FromMultiash(this.props.theContent[content][1]).digest;
@@ -265,7 +269,7 @@ class TabsSection extends React.Component {
                 className="custom-control-input"
                 id={i}
                 type="checkbox"
-                onChange={() => this.handleRequestCheckbox}
+                onChange={(event) => this.handleRequestCheckbox(event)}
               />
               <label className="custom-control-label" htmlFor={i}>
                 <span>content: {this.props.allDataDict[data_id].metadata.title} user: {this.props.pendingRequests[i][1]}</span>
@@ -307,7 +311,7 @@ class TabsSection extends React.Component {
         <li key={this.props.dataToDiscover[i][0]} 
         list-style-type="none"> 
         <Button id={this.props.dataToDiscover[i][1]} 
-        onClick={() => this.requestAccess}
+        onClick={(event) => this.requestAccess(event)}
         >{this.props.allDataDict[data_id].metadata.title}</Button></li>)
         } 
       if (toDiscoverItems.length === 0) {
@@ -415,7 +419,7 @@ class TabsSection extends React.Component {
                   color="link"
                   data-dismiss="modal"
                   type="button"
-                  onClick={() => this.grantRequests}
+                  onClick={(event) => this.grantRequests(event)}
                 >
                   Grant requests
                 </Button>
@@ -424,7 +428,7 @@ class TabsSection extends React.Component {
                   color="link"
                   data-dismiss="modal"
                   type="button"
-                  onClick={() => this.rejectRequests}
+                  onClick={(event) => this.rejectRequests(event)}
                 >
                   Reject requests
                 </Button>

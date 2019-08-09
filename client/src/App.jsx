@@ -25,6 +25,7 @@ import "./App.css";
 
 //web3 stuff
 import getWeb3 from './utils/getWeb3';
+// import web3 from 'web3';
 import IPFSUtil from './utils/multihash';
 import {getIpfsUrl} from "./utils/ipfs.js"
 
@@ -48,6 +49,7 @@ class App extends React.Component {
   
   this.handleWeb3Change = this.handleWeb3Change.bind(this);
   this.refreshContractInfo = this.refreshContractInfo.bind(this);
+  this.subscribeLogEvent = this.subscribeLogEvent.bind(this);
   }
 
   render() {
@@ -106,7 +108,8 @@ class App extends React.Component {
   async componentDidMount() {
     console.log('in Apps componentDidMount - start')
       try {      
-      this.setState({ }, await this.fetchWeb3);
+      await this.setState({ }, await this.fetchWeb3);
+
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -116,6 +119,27 @@ class App extends React.Component {
     }
     console.log('in Apps componentDidMount - end')
   };
+
+// Subscriber method
+ subscribeLogEvent = (contract, eventName) => {
+   // a list for saving subscribed event instances
+  const subscribedEvents = {}
+  const web3 = this.state.web3;  
+  // var subscribedEvents = this.state.subscribedEvents;
+  const eventJsonInterface = web3.utils._.find(    contract._jsonInterface,    o => o.name === eventName && o.type === 'event',  )
+    const subscription = web3.eth.subscribe('logs', {    address: contract.options.address,    topics: [eventJsonInterface.signature]  }, 
+    (error, result) => {    
+      if (!error) {      
+        const eventObj = web3.eth.abi.decodeLog(        eventJsonInterface.inputs,        result.data,        result.topics.slice(1)      )      
+    console.log(`New ${eventName}!`, eventObj);
+    this.refreshContractInfo();    
+  }  
+})
+  
+  subscribedEvents[eventName] = subscription
+  this.setState({subscribedEvents:subscribedEvents});
+    }
+
 
   async handleWeb3Change() {
     this.setState({ }, await this.refreshContractInfo);
@@ -134,7 +158,12 @@ class App extends React.Component {
           DataShareContract.abi,
           deployedNetwork && deployedNetwork.address,
         );
-      this.setState({web3:web3, accounts:accounts, contract: contract }, await this.refreshContractInfo);
+
+    this.setState({web3:web3, accounts:accounts, contract: contract }, await this.refreshContractInfo);
+        // subscribe to logs to be able to refresh later  
+        this.subscribeLogEvent(contract, 'LogContentAdded');
+        this.subscribeLogEvent(contract, 'LogAccessRequestWithPubKey');
+        this.subscribeLogEvent(contract, 'LogAccessGranted');
 
     }
   catch (error) {

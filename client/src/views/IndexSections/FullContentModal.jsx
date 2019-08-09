@@ -44,7 +44,7 @@ class FullContentModal extends React.Component {
         // building full content modal
         console.log('In FullContentModal render');
         var fullContentModal = []
-        if (this.props.contractReady) {
+        if (this.props.contractReady && this.props.ownerData) {
             console.log('In FullContentModal render - contract ready')
             console.log('In FullContentModal - allDataDict' + this.props.allDataDict[0].metadata.title);
             //   console.log('building modal, fullContentSelected value : ' + this.state.fullContentSelected);
