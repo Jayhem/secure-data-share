@@ -160,7 +160,7 @@ class App extends React.Component {
         );
 
     this.setState({web3:web3, accounts:accounts, contract: contract }, await this.refreshContractInfo);
-        // subscribe to logs to be able to refresh later  
+    // subscribe to logs to be able to refresh later  
         this.subscribeLogEvent(contract, 'LogContentAdded');
         this.subscribeLogEvent(contract, 'LogAccessRequestWithPubKey');
         this.subscribeLogEvent(contract, 'LogAccessGranted');

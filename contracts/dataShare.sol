@@ -1,6 +1,6 @@
 pragma solidity ^0.5.0;
-import "../node_modules/openzeppelin-solidity/contracts/ownership/ownable.sol";
-import "../node_modules/openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
+import "../client/node_modules/openzeppelin-solidity/contracts/ownership/Ownable.sol";
+import "../client/node_modules/openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
 
 /// @title A secure data sharing apparatus
 /// @author Jean-Marc Henry
