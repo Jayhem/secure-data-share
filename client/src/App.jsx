@@ -123,22 +123,22 @@ class App extends React.Component {
 // Subscriber method
  subscribeLogEvent = (contract, eventName) => {
    // a list for saving subscribed event instances
-  const subscribedEvents = {}
-  const web3 = this.state.web3;  
+    // var subscribedEvents = this.state.subscribedEvents;
+    const web3 = this.state.web3;
   // var subscribedEvents = this.state.subscribedEvents;
   const eventJsonInterface = web3.utils._.find(    contract._jsonInterface,    o => o.name === eventName && o.type === 'event',  )
     const subscription = web3.eth.subscribe('logs', {    address: contract.options.address,    topics: [eventJsonInterface.signature]  }, 
-    (error, result) => {    
-      if (!error) {      
+      (error, result) => {
+        if (!error) {
         const eventObj = web3.eth.abi.decodeLog(        eventJsonInterface.inputs,        result.data,        result.topics.slice(1)      )      
     console.log(`New ${eventName}!`, eventObj);
-    this.refreshContractInfo();    
-  }  
-})
-  
-  subscribedEvents[eventName] = subscription
-  this.setState({subscribedEvents:subscribedEvents});
-    }
+          this.refreshContractInfo();
+        }
+      })
+
+    // subscribedEvents[eventName] = subscription
+    // this.setState({ subscribedEvents: subscribedEvents });
+  }
 
 
   async handleWeb3Change() {
