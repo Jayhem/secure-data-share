@@ -1,6 +1,7 @@
-pragma solidity ^0.5.0;
-import "../client/node_modules/openzeppelin-solidity/contracts/ownership/Ownable.sol";
-import "../client/node_modules/openzeppelin-solidity/contracts/lifecycle/Pausable.sol";
+// SPDX-License-Identifier: GPL-3.0
+pragma solidity ^0.7.0;
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 /// @title A secure data sharing apparatus
 /// @author Jean-Marc Henry
@@ -47,7 +48,6 @@ contract dataShare is Ownable(), Pausable() {
     event LogDataUpdated(uint indexed data_id, bytes32 indexed IPFSaddress);
     event LogUsers_by_data();
 
-    /// @author Jean-Marc Henry
     /// @notice Internal function used to grant a user access to a datum
     /// @dev Keeps consistency between user_indexes_by_data, users_by_data and access_list
     /// @param data_id The datum identifier to which the user is granted acces
@@ -189,7 +189,7 @@ contract dataShare is Ownable(), Pausable() {
     adding the constants describing the size and hash function used.
     */
     /// @param data_id The datum identifier for which we are retrieving the IPFS location
-    /// @return the bytes32 value of the digest of the ipfs hash
+    /// @return hash the bytes32 value of the digest of the ipfs hash
     function getDataLocation(uint data_id) public view returns (bytes32 hash) {
         return data[data_id];
     }
@@ -228,7 +228,7 @@ contract dataShare is Ownable(), Pausable() {
     /**  @dev Useful to show who has access to what in the UI.
     */
     /// @param data_id The datum identifier for which we are retrieving the authorized users
-    /// @return an array of addresses, reprenting the users having access the content
+    /// @return r_the_users an array of addresses, representing the users having access the content
     function getAuthorizedUsersForDatum(uint data_id) public view returns ( address[] memory r_the_users) {
         uint array_index = 0;
         uint array_size = countAuthorizedUsers(data_id);
@@ -270,7 +270,7 @@ contract dataShare is Ownable(), Pausable() {
     requested access to the data_id.
     */
     /// @return r_data_ids in conjunction with r_users returns an array of tuples (data_id, user)
-    /// @return r_data_ids in conjunction with r_users returns an array of tuples (data_id, user)
+    /// @return r_users in conjunction with r_data_ids returns an array of tuples (data_id, user)
     function getAllPendingRequests() external view returns ( uint[] memory r_data_ids, address[] memory r_users) {
         uint array_index = 0;
         uint array_size = countPendingRequests();
