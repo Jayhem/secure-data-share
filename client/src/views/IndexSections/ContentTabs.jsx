@@ -250,12 +250,12 @@ class TabsSection extends React.Component {
       {this.props.allDataDict[i].metadata.title}
       </Button></li>)
     }
-    if (ownerItems.length == 0) {
+    if (!ownerItems[0]) {
       ownerItems.push(<div>No content created yet</div>)
     }
   }
   else {
-    ownerItems.push(<div>You do not own any content</div>)
+    ownerItems.push(<div>You cannot own content, you are not the data owner</div>)
   }
 
     // building requests items list

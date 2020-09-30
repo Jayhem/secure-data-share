@@ -45,6 +45,7 @@ class PauseButton extends React.Component {
     // }
   handlePause = async state => {
     // var buttonText = "Pause";
+    console.log(JSON.stringify(this.props.contract))
     if (this.props.paused) {
         console.log("the contract is paused, I am unpausing it")
     await this.props.contract.methods.unpause().send({from:this.props.accounts[0]});

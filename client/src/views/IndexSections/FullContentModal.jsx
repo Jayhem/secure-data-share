@@ -43,10 +43,13 @@ class FullContentModal extends React.Component {
     // building list for the content that has been shared with the user
         // building full content modal
         console.log('In FullContentModal render');
-        var fullContentModal = []
-        if (this.props.contractReady && this.props.ownerData) {
+        var fullContentModal = [];
+        var that = this;
+        if (this.props.contractReady && this.props.ownerData && this.props.allDataDict[0]) {
             console.log('In FullContentModal render - contract ready')
-            console.log('In FullContentModal - allDataDict' + this.props.allDataDict[0].metadata.title);
+            console.log('In FullContentModal render - show that var')
+            console.log(JSON.stringify(that.props))
+            //console.log('In FullContentModal - allDataDict' + this.props.allDataDict[0].metadata.title);
             //   console.log('building modal, fullContentSelected value : ' + this.state.fullContentSelected);
         fullContentModal.push(
         <Modal
