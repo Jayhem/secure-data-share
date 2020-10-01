@@ -3,7 +3,11 @@ import React from "react";
 // nodejs library that concatenates classes
 import classnames from "classnames";
 
+// Ethereum GUI helpers
 import {Blockie, PublicAddress} from "rimble-ui";
+
+// ENS
+import ENS from 'ethereum-ens';
 
 // reactstrap components
 import {
