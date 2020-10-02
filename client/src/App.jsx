@@ -4,10 +4,11 @@ import React from "react";
 import classnames from "classnames";
 
 // Ethereum GUI helpers
-import {Blockie, PublicAddress} from "rimble-ui";
+//import {Blockie, PublicAddress} from "rimble-ui";
+import Address from "./views/IndexSections/Address";
 
 // ENS
-import ENS from 'ethereum-ens';
+//import ENS from 'ethereum-ens';
 
 // reactstrap components
 import {
@@ -49,7 +50,8 @@ class App extends React.Component {
   dataToDiscover : [],
   allDataDict : {},
   paused : false,
-  contractReady : false};
+  contractReady : false,
+  provider: null};
   
   this.handleWeb3Change = this.handleWeb3Change.bind(this);
   this.refreshContractInfo = this.refreshContractInfo.bind(this);
@@ -77,7 +79,9 @@ class App extends React.Component {
               <Container>
                 <Row className="justify-content-center">
                 <ErrorBoundary>
-                <PublicAddress address={this.state.accounts[0]}/>
+                <Address value={this.state.accounts[0]} 
+                ensProvider={this.state.web3.currentProvider}
+                web3={this.state.web3}/>
                 </ErrorBoundary>
                 </Row>
                 <ContentTabs theContent={this.state.ownerData} 
@@ -162,8 +166,10 @@ class App extends React.Component {
           DataShareContract.abi,
           deployedNetwork && deployedNetwork.address,
         );
+        // const provider = web3.givenProvider;
+        // console.log(JSON.stringify(provider));
 
-    this.setState({web3:web3, accounts:accounts, contract: contract }, await this.refreshContractInfo);
+    this.setState({web3:web3, accounts:accounts, contract: contract}, await this.refreshContractInfo);
     // subscribe to logs to be able to refresh later  
         this.subscribeLogEvent(contract, 'LogContentAdded');
         this.subscribeLogEvent(contract, 'LogAccessRequestWithPubKey');
