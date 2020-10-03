@@ -1445,10 +1445,16 @@
       "links": {},
       "address": "0x2603503Ea4aBc4aC55AE691202a131161a7d2DCC",
       "transactionHash": "0xa3c9a84ad8db95a7febda20bc54c8321f4a61e8d9372edb1c353697ac88a56e8"
+    },
+    "1601612030072": {
+      "events": {},
+      "links": {},
+      "address": "0x82ca88cdC93f83E175Deab9F2eD8495B4b0442Dd",
+      "transactionHash": "0x659382699d1bab4ef06e5b94736f1dd10d5dbddb67b08726139a960a72ad9997"
     }
   },
   "schemaVersion": "3.2.3",
-  "updatedAt": "2020-10-01T02:21:38.200Z",
+  "updatedAt": "2020-10-02T04:16:07.210Z",
   "networkType": "ethereum",
   "devdoc": {
     "kind": "dev",

@@ -6397,7 +6397,7 @@
     }
   },
   "schemaVersion": "3.2.3",
-  "updatedAt": "2020-10-01T02:21:38.194Z",
+  "updatedAt": "2020-10-02T04:16:07.196Z",
   "networkType": "ethereum",
   "devdoc": {
     "details": "Models a address -> bool mapping where it is possible to iterate over all keys.",

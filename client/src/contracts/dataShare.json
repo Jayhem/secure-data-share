@@ -23081,10 +23081,225 @@
       "links": {},
       "address": "0x1F5316E6c6183Ca4A0f33e344E1C4a3BDd4B3404",
       "transactionHash": "0x956f4564c5e5d0a6db73be07ca1f86d2c75a7afd661c00c61563e4b28096f0b7"
+    },
+    "1601612030072": {
+      "events": {
+        "0x54f0a7ff1c18023c962630facbcb3059a614ef3bc89d62636fadc8368b529f2c": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "data_id",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "IPFSaddress",
+              "type": "bytes32"
+            }
+          ],
+          "name": "LogAccessGranted",
+          "type": "event"
+        },
+        "0x3d0cad026f2ac53250b0fd7dfffb4c4f4800767994b69eb9be1987edb4f26780": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "data_id",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogAccessRefused",
+          "type": "event"
+        },
+        "0xa5165aacfe032d6a5ec606938478273abcaa3a1f1b828bf30c97ef556db47b22": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user_id",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "data_id",
+              "type": "uint256"
+            }
+          ],
+          "name": "LogAccessRequest",
+          "type": "event"
+        },
+        "0x32b0e6b553b04f94f65aacc9ae0278df161d25b21a5d32be77657607e8548b93": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user_id",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "data_id",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "publicKeyX",
+              "type": "bytes32"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "publicKeyY",
+              "type": "bytes32"
+            }
+          ],
+          "name": "LogAccessRequestWithPubKey",
+          "type": "event"
+        },
+        "0x4be698563e7cb077b8572d8a1638cc35f3f48238b327d3d5bd0e2f2c188f13bf": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "user",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "data_id",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "IPFSaddress",
+              "type": "bytes32"
+            }
+          ],
+          "name": "LogAccessRevoked",
+          "type": "event"
+        },
+        "0x2b1a1ef07172cf19cbb5f71c02d0d05c3d50d790f01e035054f26c2018422856": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "data_id",
+              "type": "uint256"
+            },
+            {
+              "indexed": false,
+              "internalType": "bytes32",
+              "name": "IPFSaddress",
+              "type": "bytes32"
+            }
+          ],
+          "name": "LogContentAdded",
+          "type": "event"
+        },
+        "0x935f9715dd016909ca5676266bde959e3ac2a0bea6fb43abf17870d8077975f8": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "uint256",
+              "name": "data_id",
+              "type": "uint256"
+            },
+            {
+              "indexed": true,
+              "internalType": "bytes32",
+              "name": "IPFSaddress",
+              "type": "bytes32"
+            }
+          ],
+          "name": "LogDataUpdated",
+          "type": "event"
+        },
+        "0x050122fcee0146e86b9385a3a7eb4cee964832c86c981369e6f0496a9a9bc489": {
+          "anonymous": false,
+          "inputs": [],
+          "name": "LogUsers_by_data",
+          "type": "event"
+        },
+        "0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "previousOwner",
+              "type": "address"
+            },
+            {
+              "indexed": true,
+              "internalType": "address",
+              "name": "newOwner",
+              "type": "address"
+            }
+          ],
+          "name": "OwnershipTransferred",
+          "type": "event"
+        },
+        "0x62e78cea01bee320cd4e420270b5ea74000d11b0c9f74754ebdbfc544b05a258": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "name": "Paused",
+          "type": "event"
+        },
+        "0x5db9ee0a495bf2e6ff9c91a7834c1ba4fdd244a5e8aa4e537bd38aeae4b073aa": {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "address",
+              "name": "account",
+              "type": "address"
+            }
+          ],
+          "name": "Unpaused",
+          "type": "event"
+        }
+      },
+      "links": {},
+      "address": "0x63b112663574BAd926E06e46B56eE6dB09169529",
+      "transactionHash": "0x62f74ee33a8a8a5a8da5223b1fa193f4406b75e7df715b343fbeb7a0c45f583b"
     }
   },
   "schemaVersion": "3.2.3",
-  "updatedAt": "2020-10-01T02:21:38.173Z",
+  "updatedAt": "2020-10-02T04:16:07.140Z",
   "networkType": "ethereum",
   "devdoc": {
     "author": "Jean-Marc Henry",

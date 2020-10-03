@@ -1,11 +1,10 @@
 /* eslint-disable no-console */
 import React from "react";
-// nodejs library that concatenates classes
-import classnames from "classnames";
+
 
 // Ethereum GUI helpers
 //import {Blockie, PublicAddress} from "rimble-ui";
-import Address from "./views/IndexSections/Address";
+import Address from "./components/Address";
 
 // ENS
 //import ENS from 'ethereum-ens';
@@ -17,14 +16,11 @@ import {
   Col
 } from "reactstrap";
 
-// core components
-import DemoNavbar from "./components/Navbars/DemoNavbar.jsx";
-import CardsFooter from "./components/Footers/CardsFooter.jsx";
 
 // index page sections
-import ContentTabs from "./views/IndexSections/ContentTabs.jsx";
-import PauseButton from "./views/IndexSections/PauseButton.jsx";
-import ErrorBoundary from "./views/IndexSections/ErrorBoundary.jsx";
+import ContentTabs from "./components/ContentTabs.jsx";
+import PauseButton from "./components/PauseButton.jsx";
+import ErrorBoundary from "./components/ErrorBoundary.jsx";
 import DataShareContract from "./contracts/dataShare.json";
 import "./App.css";
 
@@ -79,9 +75,8 @@ class App extends React.Component {
               <Container>
                 <Row className="justify-content-center">
                 <ErrorBoundary>
-                <Address value={this.state.accounts[0]} 
-                ensProvider={this.state.web3.currentProvider}
-                web3={this.state.web3}/>
+                <Address value={this.state.accounts[0]}
+                 web3={this.state.web3}/>
                 </ErrorBoundary>
                 </Row>
                 <ContentTabs theContent={this.state.ownerData} 
