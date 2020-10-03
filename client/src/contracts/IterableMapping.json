@@ -6396,8 +6396,9 @@
       "transactionHash": "0xa2e9e73fe4215dbabcf01186db84cd019b490f0360bb19510e1c9e5800a4b1a7"
     }
   },
-  "schemaVersion": "3.0.10",
-  "updatedAt": "2019-08-24T04:11:23.431Z",
+  "schemaVersion": "3.2.3",
+  "updatedAt": "2020-10-02T04:16:07.196Z",
+  "networkType": "ethereum",
   "devdoc": {
     "details": "Models a address -> bool mapping where it is possible to iterate over all keys.",
     "methods": {}

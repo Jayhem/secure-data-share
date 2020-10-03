@@ -48,6 +48,18 @@ contract dataShare is Ownable(), Pausable() {
     event LogDataUpdated(uint indexed data_id, bytes32 indexed IPFSaddress);
     event LogUsers_by_data();
 
+    /// @notice External function used to Pause the contract
+    /// @dev Uses the _pause function from the Pausable.org
+    function pause() external {
+        _pause();
+    }
+
+    /// @notice External function used to Unpause the contract
+    /// @dev Uses the _unpause function from the Pausable.org
+    function unpause() external {
+        _unpause();
+    }
+
     /// @notice Internal function used to grant a user access to a datum
     /// @dev Keeps consistency between user_indexes_by_data, users_by_data and access_list
     /// @param data_id The datum identifier to which the user is granted acces

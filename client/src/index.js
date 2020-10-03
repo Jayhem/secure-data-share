@@ -2,9 +2,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
 import App from './App';
-import * as serviceWorker from './serviceWorker';
 
 import * as Sentry from '@sentry/browser';
 
@@ -32,12 +30,6 @@ import "./assets/vendor/font-awesome/css/font-awesome.min.css";
 import "./assets/scss/argon-design-system-react.scss";
 
 
-import Index from "./views/Index.jsx";
-import Landing from "./views/examples/Landing.jsx";
-import Login from "./views/examples/Login.jsx";
-import Profile from "./views/examples/Profile.jsx";
-import Register from "./views/examples/Register.jsx";
-
 
 Sentry.init({dsn: "https://ca9176017a46450f9eb1fb59b0b5924b@sentry.io/1520978"});
 
@@ -50,17 +42,6 @@ ReactDOM.render(
           path="/App"
           exact
           render={props => <App {...props} />}
-        />
-        <Route path="/login-page" exact render={props => <Login {...props} />} />
-        <Route
-          path="/profile-page"
-          exact
-          render={props => <Profile {...props} />}
-        />
-        <Route
-          path="/register-page"
-          exact
-          render={props => <Register {...props} />}
         />
         <Redirect to="/" />
       </Switch>
