@@ -19,7 +19,6 @@ import PropTypes from 'prop-types';
     console.log(netId);
     let ens = null;
     let ensProvider = (this.props.web3).currentProvider;
-
     // I'm assessing whether it is a network with ENS deployed or not by looking at the network ID
     // I looked at the ens-js code and that is what they do too
     if (netId > 5) {
@@ -71,7 +70,7 @@ Address.propTypes = {
    * web3 is the web3 object provided by web3.js 
    * it is needed to call ENS and to figure out which network is currently selected
    */
-  web3: PropTypes.object.isRequired,
+  web3: PropTypes.object.isRequired
 }
 
 

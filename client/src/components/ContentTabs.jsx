@@ -15,7 +15,15 @@
 * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
 */
+
+/**
+ * This component displays 3 tabs, one for the contract owner to create content,
+ * the second to see what content was shared with the user and what content can yet
+ * be shared in the third one.
+ * @component
+ */
 import React from "react";
+import PropTypes from 'prop-types';
 // nodejs library that concatenates classes
 import classnames from "classnames";
 
@@ -50,9 +58,8 @@ import {
   Col
 } from "reactstrap";
 import FullContentModal from "./FullContentModal";
-import ErrorBoundary from "./ErrorBoundary"
 
-class TabsSection extends React.Component {
+class ContentTabs extends React.Component {
   constructor(props) {
     super(props);
     console.log('in ContentTabs constructor')
@@ -551,5 +558,66 @@ class TabsSection extends React.Component {
 }
 
 }
+ContentTabs.propTypes = {
+  /**
+   * theContent is the prop that contains the content owned by the owner. [[2]], with the content-id for each entry
+   * and the IPFS hash of that content. It can be empty, as the owner may not have created any content.
+   */
+  theContent: PropTypes.array,
+  /**
+   * userContent is an array that contains what the current user (not the owner) has access to.
+   * it is a [[2]], where each piece of content is identified by it id and the IPFS hash.
+   */
+  userContent: PropTypes.array,
+  /**
+   * owner is a boolean that says if the current Ethereum address is the owner
+   */
+  owner: PropTypes.bool.isRequired,
+  /**
+   * web3 is provided by the web3.js generated object (Ethereum interface)
+   */
+  web3: PropTypes.object.isRequired,
+  /**
+   * accounts is an array of Ethereum addresses that have access to the site.
+   * It is provided by the web3.js generated object (Ethereum interface), so technically it is redundant to have both
+   */
+  accounts: PropTypes.array.isRequired,
+  /**
+   * Contract is an object that contains all the necessary info to interact with the Ethereum contract.
+   * The contract specifically is the datashare.sol as can be found in the contracts directory of this project.
+   */
+  contract: PropTypes.object.isRequired,
+  /**
+   * pendingRequests is an array that contains all the pending requests the owner need to either grant of reject.
+   * The array is [[2]] and the 2 elements are the content-id, the Eth address.
+   */
+  pendingRequests: PropTypes.array.isRequired,
+  /**
+   * allDataDict is dictionnary of the info related to the contents, with keys being the content-id.
+   * It contains data that has been retrieved from IPFS by the calling component. The data
+   * is diverse, it contains the encrypted content itself and the keys (encrypted) of all users that have access to this content.
+   */
+  allDataDict: PropTypes.object.isRequired,
+  /**
+   * dataDict is dictionnary of the info related to the contents, with keys being the IPFS hashes giving back the content-id.
+   */
+  dataDict: PropTypes.object.isRequired,
+  /**
+   * dataToDiscover is an array [[2]] with [content-id, IPFS Hash] of content the current user has yet to discover.
+   * Here is what one entry looks like [0,"QmeYNDYiwLxcmUetCQ2Z3TGDq5gdJg1rPYCjdS6qaoPhyc"]
+   */
+  dataToDiscover: PropTypes.array.isRequired,
+  /**
+   * contractReady is a boolean that states whether the contract info can be retrieved.
+   * This is important for rendering the data properly.
+   */
+  contractReady: PropTypes.bool.isRequired,
+  /**
+   * onWeb3Change is a function that belongs to the calling component. It allows this tab component to tell the calling component that something
+   * has changed in the state of the contract and that it should reload it, so that rendering can occur with up-to-date data.
+   */
+  onWeb3Change: PropTypes.func.isRequired
+}
 
-export default TabsSection;
+
+export default ContentTabs;
