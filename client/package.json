@@ -78,7 +78,8 @@
     "start": "node scripts/start.js",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js",
-    "docs": "jsdoc -c jsdoc.conf.json",
+    "docs-server": "npx styleguidist server",
+    "docs-html": "npx styleguidist build",
     "compile-sass": "node-sass src/assets/scss/argon-design-system-react.scss src/assets/css/argon-design-system-react.css",
     "minify-sass": "node-sass src/assets/scss/argon-design-system-react.scss src/assets/css/argon-design-system-react.min.css --output-style compressed",
     "map-sass": "node-sass src/assets/scss/argon-design-system-react.scss src/assets/css/argon-design-system-react.css --source-map true"
@@ -95,11 +96,16 @@
   "devDependencies": {
     "@types/markerclustererplus": "^2.1.33",
     "better-docs": "^2.3.2",
+    "enzyme": "^3.11.0",
+    "enzyme-adapter-react-16": "^1.15.5",
     "eslint": "^5.6.0",
     "eslint-plugin-mocha": "^6.0.0",
     "eslint-plugin-react": "^7.14.3",
     "jsdoc": "^3.6.6",
-    "react-component-hierarchy": "^1.1.0"
+    "markdown": "^0.5.0",
+    "react-component-hierarchy": "^1.1.0",
+    "react-styleguidist": "^11.1.0",
+    "react-test-renderer": "^16.13.1"
   },
   "jest": {
     "collectCoverageFrom": [

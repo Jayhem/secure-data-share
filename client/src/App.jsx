@@ -12,8 +12,7 @@ import Address from "./components/Address";
 // reactstrap components
 import {
   Container,
-  Row,
-  Col
+  Row
 } from "reactstrap";
 
 
